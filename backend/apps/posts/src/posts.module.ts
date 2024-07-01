@@ -2,7 +2,13 @@ import { Module } from '@nestjs/common';
 import { PostsController } from './posts.controller';
 import { PostsService } from './posts.service';
 
-import { DatabaseModule, UserPost, UserPostSchema } from '@app/common';
+import {
+  DatabaseModule,
+  RedisModule,
+  RedisCacheService,
+  UserPost,
+  UserPostSchema,
+} from '@app/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { PostRepository } from './repository/post.repository';
 import { SharedModule } from '@app/common/modules/shared.module';
@@ -16,9 +22,10 @@ import { SharedModule } from '@app/common/modules/shared.module';
       },
     ]),
     DatabaseModule,
+    RedisModule,
     SharedModule.registerRmq('AUTH_SERVICE', process.env.RABBITMQ_AUTH_QUEUE),
   ],
   controllers: [PostsController],
-  providers: [PostsService, PostRepository],
+  providers: [PostsService, PostRepository, RedisCacheService],
 })
 export class PostsModule {}

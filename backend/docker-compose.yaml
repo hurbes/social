@@ -23,6 +23,7 @@ services:
       - .env
     depends_on:
       - mongo
+      - redis
       - rabbitmq
     volumes:
       - .:/usr/src/app
@@ -40,12 +41,23 @@ services:
       - .env
     depends_on:
       - mongo
+      - redis
       - rabbitmq
     volumes:
       - .:/usr/src/app
       - /usr/src/app/node_modules
     ports:
       - 3500:3500
+
+  redis:
+    image: redis
+    command: /bin/sh -c "redis-server --requirepass $$REDIS_PASS"
+    env_file:
+      - .env
+    ports:
+      - 6379:6379
+    volumes:
+      - ./redis/data:/data
 
   mongo:
     image: mongo
