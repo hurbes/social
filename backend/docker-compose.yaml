@@ -1,6 +1,18 @@
 version: '3.1'
 
 services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    hostname: rabbitmq
+    volumes:
+      - /var/lib/rabbitmq
+    ports:
+      - '5672:5672'
+      - '15672:15672'
+    env_file:
+      - .env
+
   auth:
     build:
       context: .
@@ -11,6 +23,7 @@ services:
       - .env
     depends_on:
       - mongo
+      - rabbitmq
     volumes:
       - .:/usr/src/app
       - /usr/src/app/node_modules
@@ -27,7 +40,7 @@ services:
       - .env
     depends_on:
       - mongo
-      - auth
+      - rabbitmq
     volumes:
       - .:/usr/src/app
       - /usr/src/app/node_modules
