@@ -6,18 +6,16 @@ import {
 import * as bcrypt from 'bcrypt';
 import { User } from '@app/common';
 import { UserRepository } from './repository/user.repository';
-import { CreateUserRequest } from './dto/create-user.dto';
-import { ExistingUserRequest } from './dto/existing_user_dto';
+
 import { JwtService } from '@nestjs/jwt';
 import { Response } from 'express';
-import { ConfigService } from '@nestjs/config';
+import { CreateUserRequest, ExistingUserRequest } from '@app/dto';
 
 @Injectable()
 export class AppService {
   constructor(
     private readonly usersRepository: UserRepository,
     private readonly jwtService: JwtService,
-    private readonly configService: ConfigService,
   ) {}
 
   async getUsers(): Promise<User[]> {
@@ -34,8 +32,10 @@ export class AppService {
     });
   }
 
-  async createUser(user: CreateUserRequest): Promise<User> {
-    return await this.usersRepository.create(user);
+  async createUser(
+    user: Omit<CreateUserRequest, 'confirmPassword'>,
+  ): Promise<User> {
+    return await this.usersRepository.create(user as User);
   }
 
   async updateUser(id: number, user: User): Promise<User> {

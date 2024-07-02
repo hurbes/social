@@ -7,10 +7,10 @@ import {
   RmqContext,
 } from '@nestjs/microservices';
 import { SharedService } from '@app/common/services/shared.service';
-import { ExistingUserRequest } from './dto/existing_user_dto';
-import { CreateUserRequest } from './dto/create-user.dto';
+
 import { JwtGuard } from './guard/jwt.guard';
 import { User } from '@app/common';
+import { CreateUserRequest, ExistingUserRequest } from '@app/dto';
 
 @Controller()
 export class AppController {
@@ -21,7 +21,7 @@ export class AppController {
   ) {}
 
   @MessagePattern({ cmd: 'get-users' })
-  async getUsers(@Ctx() context: RmqContext) {
+  async getUsers(@Ctx() context: RmqContext): Promise<User[]> {
     this.sharedService.acknowledgeMessage(context);
 
     return this.appService.getUsers();
@@ -31,7 +31,7 @@ export class AppController {
   async register(
     @Ctx() context: RmqContext,
     @Payload() newUser: CreateUserRequest,
-  ) {
+  ): Promise<User> {
     this.sharedService.acknowledgeMessage(context);
 
     return this.appService.register(newUser);
