@@ -1,40 +1,54 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+
 import { PostRepository } from './repository/post.repository';
-import { CreatePostDto } from './dto/create-post.request';
 import { UserPost, RedisCacheService } from '@app/common';
-import { ClientProxy } from '@nestjs/microservices';
-// import { Post } from '@app/common';
+import {
+  CreatePostRequest,
+  PostResponse,
+  postResponseSchema,
+  UpdatePostRequest,
+} from '@app/dto';
 
 @Injectable()
 export class PostsService {
   constructor(
     private readonly postRepository: PostRepository,
-    @Inject('AUTH_SERVICE') private readonly authService: ClientProxy,
     private readonly cache: RedisCacheService,
   ) {}
 
-  async createPost(request: CreatePostDto): Promise<UserPost> {
-    const newPost = await this.postRepository.create(request);
-    console.log('New post created:', newPost);
-    this.cache.set(newPost._id.toString(), newPost);
-    return newPost;
+  async createPost(request: CreatePostRequest): Promise<PostResponse> {
+    const post = await this.postRepository.create(request as UserPost);
+    return postResponseSchema.parse(post);
   }
 
-  async getPost(id: string): Promise<UserPost> {
-    const cachedPost = await this.cache.get(id);
-    if (cachedPost) {
-      console.log('Cache hit');
-      return cachedPost as UserPost;
-    }
-
-    return this.postRepository.findOne({ _id: id });
+  async getPostById(id: string): Promise<PostResponse> {
+    const post = await this.postRepository.findOne({ _id: id });
+    return postResponseSchema.parse(post);
   }
 
-  async getPosts(): Promise<UserPost[]> {
-    return this.postRepository.find();
+  async getPosts(): Promise<PostResponse[]> {
+    const post = await this.postRepository.find();
+
+    return post.map((p) => postResponseSchema.parse(p));
   }
 
-  getAuth() {
-    return this.authService.send({ cmd: 'auth' }, {});
+  async getUserPosts(uid: string): Promise<PostResponse[]> {
+    const post = await this.postRepository.find({
+      'author._id': uid,
+    });
+
+    return post.map((p) => postResponseSchema.parse(p));
+  }
+
+  async updatePost(request: UpdatePostRequest): Promise<PostResponse> {
+    const post = await this.postRepository.upsert(
+      request as UserPost,
+      request._id,
+    );
+    return postResponseSchema.parse(post);
+  }
+
+  async deletePost(id: string): Promise<void> {
+    await this.postRepository.delete({ _id: id });
   }
 }

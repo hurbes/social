@@ -8,13 +8,17 @@ import {
   RedisCacheService,
   UserPost,
   UserPostSchema,
+  SharedService,
+  SharedModule,
 } from '@app/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { PostRepository } from './repository/post.repository';
-import { SharedModule } from '@app/common/modules/shared.module';
+import { AuthModule } from '@app/common/modules/auth.module';
 
 @Module({
   imports: [
+    AuthModule,
+    SharedModule,
     MongooseModule.forFeature([
       {
         name: UserPost.name,
@@ -23,9 +27,16 @@ import { SharedModule } from '@app/common/modules/shared.module';
     ]),
     DatabaseModule,
     RedisModule,
-    SharedModule.registerRmq('AUTH_SERVICE', process.env.RABBITMQ_AUTH_QUEUE),
   ],
   controllers: [PostsController],
-  providers: [PostsService, PostRepository, RedisCacheService],
+  providers: [
+    PostsService,
+    PostRepository,
+    RedisCacheService,
+    {
+      provide: 'SharedServiceInterface',
+      useClass: SharedService,
+    },
+  ],
 })
 export class PostsModule {}
