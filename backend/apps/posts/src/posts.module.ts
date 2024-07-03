@@ -13,11 +13,9 @@ import {
 } from '@app/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { PostRepository } from './repository/post.repository';
-import { AuthModule } from '@app/common/modules/auth.module';
 
 @Module({
   imports: [
-    AuthModule,
     SharedModule,
     MongooseModule.forFeature([
       {

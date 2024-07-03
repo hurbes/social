@@ -16,6 +16,7 @@ import { SharedService } from '../services/shared.service';
         RABBITMQ_PASS: Joi.string().required(),
         RABBITMQ_HOST: Joi.string().required(),
         RABBITMQ_POST_QUEUE: Joi.string().required(),
+        RABBITMQ_COMMENT_QUEUE: Joi.string().required(),
         JWT_SECRET: Joi.string().required(),
         JWT_EXPIRATION: Joi.string().required(),
         JWT_PRIVATE_KEY: Joi.string().required(),
