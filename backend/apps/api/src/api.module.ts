@@ -7,6 +7,7 @@ import { AuthModule, SharedModule } from '@app/common';
   imports: [
     AuthModule,
     SharedModule.registerRmq('AUTH_SERVICE', process.env.RABBITMQ_AUTH_QUEUE),
+    SharedModule.registerRmq('POST_SERVICE', process.env.RABBITMQ_POST_QUEUE),
   ],
   controllers: [ApiController],
   providers: [ApiService],
