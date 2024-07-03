@@ -14,6 +14,7 @@ export const createUserSchema = z
     email: z.string().email(),
     password: passwordField,
     confirmPassword: passwordField,
+    profile_img: z.string().optional(),
   })
   .required()
   .superRefine(({ confirmPassword, password }, ctx) => {
