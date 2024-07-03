@@ -13,6 +13,9 @@ import {
 import { Response } from 'express';
 import { ApiService } from './api.service';
 import {
+  CommentResponse,
+  CreateCommentRequest,
+  createCommentRequestSchema,
   CreatePostRequest,
   createPostRequestSchema,
   CreateUserRequest,
@@ -20,6 +23,7 @@ import {
   existingUserRequest,
   ExistingUserRequest,
   PostResponse,
+  UpdateCommentRequest,
   UpdatePostRequest,
   updatePostRequestSchema,
   UserResponse,
@@ -102,5 +106,34 @@ export class ApiController {
   @Delete('post/:id')
   deletePost(@Param() id: string): Promise<void> {
     return this.apiService.deletePost(id);
+  }
+
+  @UseGuards(AuthGuard)
+  @Get('post/:id/comments')
+  getComments(@Param() id: string): Promise<CommentResponse[]> {
+    return this.apiService.getComments(id);
+  }
+
+  @UsePipes(new ZodValidationPipe(createCommentRequestSchema))
+  @UseGuards(AuthGuard)
+  @Post('post/:id/comment')
+  createComment(
+    @Body() comment: CreateCommentRequest,
+  ): Promise<CommentResponse> {
+    return this.apiService.createComment(comment);
+  }
+
+  @UseGuards(AuthGuard)
+  @Put('comment')
+  updateComment(
+    @Body() comment: UpdateCommentRequest,
+  ): Promise<CommentResponse> {
+    return this.apiService.updateComment(comment);
+  }
+
+  @UseGuards(AuthGuard)
+  @Delete('comment/:id')
+  deleteComment(@Param() id: string): Promise<void> {
+    return this.apiService.deleteComment(id);
   }
 }

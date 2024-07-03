@@ -3,10 +3,13 @@ import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 import { Response } from 'express';
 import {
+  CommentResponse,
+  CreateCommentRequest,
   CreatePostRequest,
   CreateUserRequest,
   ExistingUserRequest,
   PostResponse,
+  UpdateCommentRequest,
   UpdatePostRequest,
   UserResponse,
 } from '@app/dto';
@@ -17,7 +20,41 @@ export class ApiService {
   constructor(
     @Inject('AUTH_SERVICE') private readonly authService: ClientProxy,
     @Inject('POST_SERVICE') private readonly postService: ClientProxy,
+    @Inject('COMMENT_SERVICE') private readonly commentService: ClientProxy,
   ) {}
+
+  async getComments(post_id: string): Promise<CommentResponse[]> {
+    const $response = this.commentService.send<CommentResponse[], any>(
+      { cmd: 'comments' },
+      post_id,
+    );
+
+    const response = await firstValueFrom($response);
+
+    if (response.length === 0) {
+      throw new NotFoundException('Comments not found.');
+    }
+
+    return response;
+  }
+
+  async createComment(comment: CreateCommentRequest): Promise<CommentResponse> {
+    return this.commentService.send<CommentResponse, any>(
+      { cmd: 'add-comment' },
+      { ...comment },
+    ) as CommentResponse;
+  }
+
+  async updateComment(comment: UpdateCommentRequest): Promise<CommentResponse> {
+    return this.commentService.send<CommentResponse, any>(
+      { cmd: 'update-comment' },
+      { ...comment },
+    ) as CommentResponse;
+  }
+
+  async deleteComment(id: string): Promise<void> {
+    this.commentService.send<void, string>({ cmd: 'delete-comment' }, id);
+  }
 
   async getPosts(): Promise<PostResponse[]> {
     const $response = this.postService.send<PostResponse[], any>(
