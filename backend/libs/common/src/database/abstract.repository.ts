@@ -70,6 +70,10 @@ export abstract class AbstractRepository<TDocument extends AbstractDocument> {
     });
   }
 
+  async delete(filterQuery: FilterQuery<TDocument>) {
+    return this.model.deleteOne(filterQuery);
+  }
+
   async find(filterQuery?: FilterQuery<TDocument>) {
     return this.model.find(filterQuery, {}, { lean: true });
   }

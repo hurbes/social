@@ -11,6 +11,9 @@ export class User extends AbstractDocument {
 
   @Prop({ required: true })
   name: string;
+
+  @Prop({ required: false })
+  profile_img: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
