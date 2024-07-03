@@ -9,7 +9,12 @@ import { UserRepository } from './repository/user.repository';
 
 import { JwtService } from '@nestjs/jwt';
 import { Response } from 'express';
-import { CreateUserRequest, ExistingUserRequest } from '@app/dto';
+import {
+  CreateUserRequest,
+  ExistingUserRequest,
+  UserResponse,
+  userResponseSchema,
+} from '@app/dto';
 
 @Injectable()
 export class AppService {
@@ -18,12 +23,14 @@ export class AppService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async getUsers(): Promise<User[]> {
-    return await this.usersRepository.find();
+  async getUsers(): Promise<UserResponse[]> {
+    const result = await this.usersRepository.find();
+    return result.map((user) => userResponseSchema.parse(user));
   }
 
-  async getUserById(id: number): Promise<User> {
-    return await this.usersRepository.findOne({ _id: id });
+  async getUserById(id: string): Promise<UserResponse> {
+    const result = await this.usersRepository.findOne({ _id: id });
+    return userResponseSchema.parse(result);
   }
 
   async findByEmail(email: string): Promise<User> {
@@ -34,19 +41,21 @@ export class AppService {
 
   async createUser(
     user: Omit<CreateUserRequest, 'confirmPassword'>,
-  ): Promise<User> {
-    return await this.usersRepository.create(user as User);
+  ): Promise<UserResponse> {
+    const result = await this.usersRepository.create(user as User);
+    return userResponseSchema.parse(result);
   }
 
-  async updateUser(id: number, user: User): Promise<User> {
-    return await this.usersRepository.upsert({ _id: id }, user);
+  async updateUser(id: number, user: User): Promise<UserResponse> {
+    const result = await this.usersRepository.upsert({ _id: id }, user);
+    return userResponseSchema.parse(result);
   }
 
   async hashPassword(password: string): Promise<string> {
     return bcrypt.hash(password, 12);
   }
 
-  async register(newUser: Readonly<CreateUserRequest>): Promise<User> {
+  async register(newUser: Readonly<CreateUserRequest>): Promise<UserResponse> {
     const { name, email, password } = newUser;
 
     const existingUser = await this.findByEmail(email);
@@ -63,8 +72,7 @@ export class AppService {
       password: hashedPassword,
     });
 
-    delete savedUser.password;
-    return savedUser;
+    return userResponseSchema.parse(savedUser);
   }
 
   async doesPasswordMatch(
@@ -93,7 +101,7 @@ export class AppService {
 
   async login(
     existingUser: Readonly<ExistingUserRequest>,
-  ): Promise<{ user: User; jwt: string }> {
+  ): Promise<{ user: UserResponse; jwt: string }> {
     const { email, password } = existingUser;
     const user = await this.validateUser(email, password);
 
@@ -101,11 +109,10 @@ export class AppService {
       throw new UnauthorizedException();
     }
 
-    delete user.password;
-
     const jwt = await this.jwtService.signAsync({ user });
+    const userResponse = userResponseSchema.parse(user);
 
-    return { user, jwt };
+    return { user: userResponse, jwt };
   }
 
   async verifyJwt(jwt: string): Promise<{ user: User; exp: number }> {

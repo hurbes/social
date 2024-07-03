@@ -1,8 +1,9 @@
-import { User } from '@app/common';
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 import { Response } from 'express';
+import { CreateUserRequest, ExistingUserRequest, UserResponse } from '@app/dto';
+import { User } from '@app/common';
 
 @Injectable()
 export class ApiService {
@@ -31,20 +32,23 @@ export class ApiService {
   //   return this.postService.send('deletePost', id);
   // }
 
-  async getUserById(id: string) {
-    return this.authService.send('getUserById', id);
+  async getUserById(id: string): Promise<UserResponse> {
+    return this.authService.send<User>({ cmd: 'get-user' }, id) as any;
   }
 
-  async getUsers() {
-    return this.authService.send('getUsers', {});
+  async getUsers(): Promise<UserResponse[]> {
+    return this.authService.send({ cmd: 'get-users' }, {}) as any;
   }
 
-  async updateUser(user: any) {
-    return this.authService.send('updateUser', user);
+  async updateUser(user: UserResponse): Promise<UserResponse> {
+    return this.authService.send({ cmd: 'update-User' }, { ...user }) as any;
   }
 
-  async login(body: Record<string, string>, response: Response): Promise<User> {
-    const $res = this.authService.send<{ user: User; jwt: string }>(
+  async login(
+    body: CreateUserRequest,
+    response: Response,
+  ): Promise<UserResponse> {
+    const $res = this.authService.send<{ user: UserResponse; jwt: string }>(
       { cmd: 'login' },
       { ...body },
     );
@@ -54,7 +58,7 @@ export class ApiService {
     return user;
   }
 
-  async register(body: Record<string, string>) {
-    return this.authService.send({ cmd: 'register' }, { ...body });
+  async register(body: ExistingUserRequest): Promise<UserResponse> {
+    return this.authService.send({ cmd: 'register' }, { ...body }) as any;
   }
 }

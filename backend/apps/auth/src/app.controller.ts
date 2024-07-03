@@ -9,8 +9,7 @@ import {
 import { SharedService } from '@app/common/services/shared.service';
 
 import { JwtGuard } from './guard/jwt.guard';
-import { User } from '@app/common';
-import { CreateUserRequest, ExistingUserRequest } from '@app/dto';
+import { CreateUserRequest, ExistingUserRequest, UserResponse } from '@app/dto';
 
 @Controller()
 export class AppController {
@@ -21,7 +20,7 @@ export class AppController {
   ) {}
 
   @MessagePattern({ cmd: 'get-users' })
-  async getUsers(@Ctx() context: RmqContext): Promise<User[]> {
+  async getUsers(@Ctx() context: RmqContext): Promise<UserResponse[]> {
     this.sharedService.acknowledgeMessage(context);
 
     return this.appService.getUsers();
@@ -31,7 +30,7 @@ export class AppController {
   async register(
     @Ctx() context: RmqContext,
     @Payload() newUser: CreateUserRequest,
-  ): Promise<User> {
+  ): Promise<UserResponse> {
     this.sharedService.acknowledgeMessage(context);
 
     return this.appService.register(newUser);
@@ -41,7 +40,7 @@ export class AppController {
   async login(
     @Ctx() context: RmqContext,
     @Payload() existingUser: ExistingUserRequest,
-  ): Promise<{ user: User; jwt: string }> {
+  ): Promise<{ user: UserResponse; jwt: string }> {
     this.sharedService.acknowledgeMessage(context);
 
     return this.appService.login(existingUser);
@@ -61,8 +60,9 @@ export class AppController {
   @MessagePattern({ cmd: 'get-user' })
   async getUserById(
     @Ctx() context: RmqContext,
-    @Payload() user: { id: number },
-  ) {
+    @Payload() user: { id: string },
+  ): Promise<UserResponse> {
+    console.log('getUserById', user);
     this.sharedService.acknowledgeMessage(context);
 
     return this.appService.getUserById(user.id);
