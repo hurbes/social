@@ -6,8 +6,10 @@ import {
   Param,
   Post,
   Put,
+  Req,
   Res,
   UseGuards,
+  UseInterceptors,
   UsePipes,
 } from '@nestjs/common';
 import { Response } from 'express';
@@ -28,9 +30,11 @@ import {
   updatePostRequestSchema,
   UserResponse,
   userResponseSchema,
-  ZodValidationPipe,
-} from '@app/dto';
-import { AuthGuard } from '@app/common';
+} from 'shared-schema';
+import { Types } from 'mongoose';
+import { AuthGuard, UserRequest } from '@app/common';
+import { UserInterceptor } from '@app/common/interceptors/user.interceptor';
+import { ZodValidationPipe } from '@app/dto';
 
 @Controller('api/v1')
 export class ApiController {
@@ -88,11 +92,16 @@ export class ApiController {
     return this.apiService.getPostById(id);
   }
 
+  @UseInterceptors(UserInterceptor)
   @UsePipes(new ZodValidationPipe(createPostRequestSchema))
   @UseGuards(AuthGuard)
   @Post('post')
-  createPost(@Body() post: CreatePostRequest): Promise<PostResponse> {
-    return this.apiService.createPost(post);
+  createPost(
+    @Body() post: CreatePostRequest,
+    @Req() request: UserRequest,
+  ): Promise<PostResponse> {
+    const postWithUser = { ...post, author: request.user };
+    return this.apiService.createPost(postWithUser);
   }
 
   @UsePipes(new ZodValidationPipe(updatePostRequestSchema))
@@ -110,17 +119,28 @@ export class ApiController {
 
   @UseGuards(AuthGuard)
   @Get('post/:id/comments')
-  getComments(@Param() id: string): Promise<CommentResponse[]> {
-    return this.apiService.getComments(id);
+  getComments(@Param() id: { id: string }): Promise<CommentResponse[]> {
+    console.log('id', id.id);
+    return this.apiService.getComments(id.id);
   }
 
-  @UsePipes(new ZodValidationPipe(createCommentRequestSchema))
   @UseGuards(AuthGuard)
+  @UseInterceptors(UserInterceptor)
+  // @UsePipes(new ZodValidationPipe(createCommentRequestSchema))
   @Post('post/:id/comment')
   createComment(
     @Body() comment: CreateCommentRequest,
+    @Req() request: UserRequest,
+    @Param() id: { id: string },
   ): Promise<CommentResponse> {
-    return this.apiService.createComment(comment);
+    const commentWithUser = {
+      ...comment,
+      author: request.user,
+      post_id: new Types.ObjectId(id.id),
+    };
+    console.log('commentWithUser', commentWithUser, comment, request.user);
+
+    return this.apiService.createComment(commentWithUser);
   }
 
   @UseGuards(AuthGuard)

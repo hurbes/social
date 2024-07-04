@@ -12,7 +12,7 @@ import {
   UpdateCommentRequest,
   UpdatePostRequest,
   UserResponse,
-} from '@app/dto';
+} from 'shared-schema';
 import { User } from '@app/common';
 
 @Injectable()
@@ -39,6 +39,7 @@ export class ApiService {
   }
 
   async createComment(comment: CreateCommentRequest): Promise<CommentResponse> {
+    console.log('comment', comment);
     return this.commentService.send<CommentResponse, any>(
       { cmd: 'add-comment' },
       { ...comment },
@@ -133,7 +134,12 @@ export class ApiService {
     );
     const { user, jwt } = await firstValueFrom($res);
 
-    response.cookie('Authentication', jwt, { httpOnly: true, secure: true });
+    response.cookie('Authentication', jwt, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+      maxAge: 60 * 60 * 24 * 7,
+    });
     return user;
   }
 
