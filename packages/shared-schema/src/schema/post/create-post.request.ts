@@ -1,11 +1,9 @@
-import { z } from 'zod';
-import { author } from '../auther/auth.schema';
+import { z } from "zod";
 
 const createPostRequestSchema = z
   .object({
     title: z.string(),
     content: z.string(),
-    author: author.required(),
     comment_count: z.number().default(0),
     like_count: z.number().default(0),
     trending_points: z.number().default(0),
