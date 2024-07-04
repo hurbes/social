@@ -1,51 +1,105 @@
+"use client";
 import React from "react";
 import { InputField } from "@/components/input";
+import { Controller, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { ExistingUserRequest, existingUserRequest } from "shared-schema";
+import { useMutation } from "@tanstack/react-query";
+import { AppButton } from "@/components/button";
+import { useRouter } from "next/navigation";
+
+const login = async (data: ExistingUserRequest) => {
+  const result = await fetch("http://localhost:3001/api/v1/auth/login/", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+    body: JSON.stringify(data),
+  });
+
+  if (!result || !result.ok) {
+    throw new Error("Login failed");
+  }
+
+  return result;
+};
+
 export default function Login() {
+  const router = useRouter();
+  const { handleSubmit, control } = useForm<ExistingUserRequest>({
+    resolver: zodResolver(existingUserRequest),
+  });
+
+  const { mutate, isPending } = useMutation({
+    mutationFn: login,
+    mutationKey: ["login"],
+    onError: (error) => {
+      console.error("Login failed: ", error);
+    },
+    onSuccess: () => {
+      console.log("Login successful");
+      router.push("/");
+    },
+  });
+
+  const onSubmit = (data: ExistingUserRequest) => {
+    mutate(data);
+  };
+
   return (
-    <html lang='en' className='h-full bg-white items-center '>
-      <div className='flex min-h-full flex-1 flex-col justify-center px-6 py-12 lg:px-8'>
-        <div className='sm:mx-auto sm:w-full sm:max-w-sm'>
-          <h2 className='mt-10 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900'>
-            Sign in to your account
-          </h2>
-        </div>
+    <div className='flex min-h-full bg-white h-screen flex-1 flex-col justify-center px-6 py-12 lg:px-8'>
+      <div className='sm:mx-auto sm:w-full sm:max-w-md'>
+        <h2 className='mt-6 text-center text-3xl font-extrabold text-gray-900'>
+          Sign in to your account
+        </h2>
 
-        <div className='mt-10 sm:mx-auto sm:w-full sm:max-w-sm'>
-          <form className='space-y-6' action='#' method='POST'>
-            <InputField
-              label='Email address'
-              type='email'
-              id='email'
-              name='email'
-              autoComplete='email'
-              required
-            />
-            <InputField
-              label='Password'
-              type='password'
-              id='password'
-              name='password'
-              autoComplete='current-password'
-              required
-            />
+        <form onSubmit={handleSubmit(onSubmit)} className='mt-8 space-y-6'>
+          <Controller
+            name='email'
+            control={control}
+            defaultValue=''
+            render={({ field, fieldState }) => (
+              <InputField
+                label='Email address'
+                type='email'
+                id='email'
+                {...field}
+                autoComplete='email'
+                required
+                error={fieldState.error?.message}
+              />
+            )}
+          />
+          <Controller
+            name='password'
+            control={control}
+            defaultValue=''
+            render={({ field, fieldState }) => (
+              <InputField
+                label='Password'
+                type='password'
+                id='password'
+                {...field}
+                autoComplete='current-password'
+                required
+                error={fieldState.error?.message}
+              />
+            )}
+          />
 
-            <button
-              type='submit'
-              className='flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'>
-              Sign in
-            </button>
-          </form>
+          <AppButton title={"Sign In"} type={"submit"} />
+        </form>
 
-          <p className='mt-10 text-center text-sm text-gray-500'>
-            Not a member?{" "}
-            <a
-              href='/auth/register'
-              className='font-semibold leading-6 text-indigo-600 hover:text-indigo-500'>
-              Register now
-            </a>
-          </p>
-        </div>
+        <p className='mt-3 text-center text-sm text-gray-600'>
+          Not a member?{" "}
+          <a
+            href='/auth/register'
+            className='font-medium text-indigo-600 hover:text-indigo-500'>
+            Register now
+          </a>
+        </p>
       </div>
-    </html>
+    </div>
   );
 }
