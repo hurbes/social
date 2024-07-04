@@ -1,10 +1,11 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
-import { User } from '@app/common';
+import { User, UserJwt } from '@app/common';
 import { UserRepository } from './repository/user.repository';
 
 import { JwtService } from '@nestjs/jwt';
@@ -14,7 +15,7 @@ import {
   ExistingUserRequest,
   UserResponse,
   userResponseSchema,
-} from '@app/dto';
+} from 'shared-schema';
 
 @Injectable()
 export class AppService {
@@ -97,6 +98,16 @@ export class AppService {
     if (!doesPasswordMatch) return null;
 
     return user;
+  }
+
+  async getUserFromHeader(jwt: string): Promise<UserJwt> {
+    if (!jwt) return;
+
+    try {
+      return this.jwtService.decode(jwt);
+    } catch (error) {
+      throw new BadRequestException();
+    }
   }
 
   async login(

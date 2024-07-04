@@ -7,7 +7,7 @@ import {
   PostResponse,
   postResponseSchema,
   UpdatePostRequest,
-} from '@app/dto';
+} from 'shared-schema';
 
 @Injectable()
 export class PostsService {

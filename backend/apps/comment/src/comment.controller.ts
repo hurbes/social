@@ -8,8 +8,7 @@ import {
 
 import { CommentService } from './comment.service';
 import { SharedService } from '@app/common';
-import { CreateCommentRequest } from '@app/dto/schema/comment/create-comment.request';
-import { UpdateCommentRequest } from '@app/dto/schema/comment/update-comment.request';
+import { CreateCommentRequest, UpdateCommentRequest } from 'shared-schema';
 
 @Controller()
 export class CommentController {
@@ -20,13 +19,10 @@ export class CommentController {
   ) {}
 
   @MessagePattern({ cmd: 'comments' })
-  getComments(
-    @Ctx() context: RmqContext,
-    @Payload() post: { post_id: string },
-  ) {
+  getComments(@Ctx() context: RmqContext, @Payload() post: string) {
     this.sharedService.acknowledgeMessage(context);
 
-    return this.commentService.getComments(post.post_id);
+    return this.commentService.getComments(post);
   }
 
   @MessagePattern({ cmd: 'add-comment' })

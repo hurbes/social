@@ -9,7 +9,12 @@ import {
 import { SharedService } from '@app/common/services/shared.service';
 
 import { JwtGuard } from './guard/jwt.guard';
-import { CreateUserRequest, ExistingUserRequest, UserResponse } from '@app/dto';
+import {
+  author,
+  CreateUserRequest,
+  ExistingUserRequest,
+  UserResponse,
+} from 'shared-schema';
 
 @Controller()
 export class AppController {
@@ -44,6 +49,16 @@ export class AppController {
     this.sharedService.acknowledgeMessage(context);
 
     return this.appService.login(existingUser);
+  }
+  @MessagePattern({ cmd: 'decode-jwt' })
+  async decodeJwt(
+    @Ctx() context: RmqContext,
+    @Payload() payload: { cookie: string },
+  ) {
+    this.sharedService.acknowledgeMessage(context);
+
+    const res = await this.appService.getUserFromHeader(payload.cookie);
+    return author.parse(res.user);
   }
 
   @MessagePattern({ cmd: 'verify-jwt' })

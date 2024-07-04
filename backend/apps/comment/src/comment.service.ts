@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { CommentRepository } from './repository/comment.repository';
-import { CreateCommentRequest } from '@app/dto/schema/comment/create-comment.request';
 import { PostComment } from '@app/common';
 import {
   CommentResponse,
   commentResponseSchema,
+  CreateCommentRequest,
   UpdateCommentRequest,
-} from '@app/dto';
+} from 'shared-schema';
 
 @Injectable()
 export class CommentService {
