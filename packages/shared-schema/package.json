@@ -1,0 +1,22 @@
+{
+  "private": true,
+  "name": "shared-schema",
+  "version": "1.0.0",
+  "description": "",
+  "workspaces": [
+    "packages/*",
+    "frontend/*"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "mongoose": "^8.4.4",
+    "zod": "^3.23.8"
+  }
+}
