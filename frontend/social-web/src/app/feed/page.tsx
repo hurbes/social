@@ -1,132 +1,96 @@
+"use client";
+import React from "react";
+import { AppButton } from "@/components/button";
 import CommentPanel from "@/components/comment-panel";
+import { InputField } from "@/components/input";
 import { PostItem } from "@/components/post-item";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  CreatePostRequest,
+  createPostRequestSchema,
+  PostResponse,
+} from "shared-schema";
+import { Controller, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 
-export const posts = [
-  {
-    id: 1,
-    title: "Boost your conversion rate",
-    href: "#",
-    description:
-      "Illo sint voluptas. Error voluptates culpa eligendi. Hic vel totam vitae illo. Non aliquid explicabo necessitatibus unde. Sed exercitationem placeat consectetur nulla deserunt vel. Iusto corrupti dicta.",
-    date: "Mar 16, 2020",
-    datetime: "2020-03-16",
-    category: { title: "Marketing", href: "#" },
-    author: {
-      name: "Michael Foster",
-      role: "Co-Founder / CTO",
-      href: "#",
-      imageUrl:
-        "https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
-    },
-  },
-  {
-    id: 2,
-    title: "Boost your conversion rate",
-    href: "#",
-    description:
-      "Illo sint voluptas. Error voluptates culpa eligendi. Hic vel totam vitae illo. Non aliquid explicabo necessitatibus unde. Sed exercitationem placeat consectetur nulla deserunt vel. Iusto corrupti dicta.",
-    date: "Mar 16, 2020",
-    datetime: "2020-03-16",
-    category: { title: "Marketing", href: "#" },
-    author: {
-      name: "Michael Foster",
-      role: "Co-Founder / CTO",
-      href: "#",
-      imageUrl:
-        "https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
-    },
-  },
-  {
-    id: 3,
-    title: "Boost your conversion rate",
-    href: "#",
-    description:
-      "Illo sint voluptas. Error voluptates culpa eligendi. Hic vel totam vitae illo. Non aliquid explicabo necessitatibus unde. Sed exercitationem placeat consectetur nulla deserunt vel. Iusto corrupti dicta.",
-    date: "Mar 16, 2020",
-    datetime: "2020-03-16",
-    category: { title: "Marketing", href: "#" },
-    author: {
-      name: "Michael Foster",
-      role: "Co-Founder / CTO",
-      href: "#",
-      imageUrl:
-        "https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
-    },
-  },
-  {
-    id: 4,
-    title: "Boost your conversion rate",
-    href: "#",
-    description:
-      "Illo sint voluptas. Error voluptates culpa eligendi. Hic vel totam vitae illo. Non aliquid explicabo necessitatibus unde. Sed exercitationem placeat consectetur nulla deserunt vel. Iusto corrupti dicta.",
-    date: "Mar 16, 2020",
-    datetime: "2020-03-16",
-    category: { title: "Marketing", href: "#" },
-    author: {
-      name: "Michael Foster",
-      role: "Co-Founder / CTO",
-      href: "#",
-      imageUrl:
-        "https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
-    },
-  },
-  {
-    id: 5,
-    title: "Boost your conversion rate",
-    href: "#",
-    description:
-      "Illo sint voluptas. Error voluptates culpa eligendi. Hic vel totam vitae illo. Non aliquid explicabo necessitatibus unde. Sed exercitationem placeat consectetur nulla deserunt vel. Iusto corrupti dicta.",
-    date: "Mar 16, 2020",
-    datetime: "2020-03-16",
-    category: { title: "Marketing", href: "#" },
-    author: {
-      name: "Michael Foster",
-      role: "Co-Founder / CTO",
-      href: "#",
-      imageUrl:
-        "https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
-    },
-  },
-  {
-    id: 6,
-    title: "Boost your conversion rate",
-    href: "#",
-    description:
-      "Illo sint voluptas. Error voluptates culpa eligendi. Hic vel totam vitae illo. Non aliquid explicabo necessitatibus unde. Sed exercitationem placeat consectetur nulla deserunt vel. Iusto corrupti dicta.",
-    date: "Mar 16, 2020",
-    datetime: "2020-03-16",
-    category: { title: "Marketing", href: "#" },
-    author: {
-      name: "Michael Foster",
-      role: "Co-Founder / CTO",
-      href: "#",
-      imageUrl:
-        "https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
-    },
-  },
-  {
-    id: 7,
-    title: "Boost your conversion rate",
-    href: "#",
-    description:
-      "Illo sint voluptas. Error voluptates culpa eligendi. Hic vel totam vitae illo. Non aliquid explicabo necessitatibus unde. Sed exercitationem placeat consectetur nulla deserunt vel. Iusto corrupti dicta.",
-    date: "Mar 16, 2020",
-    datetime: "2020-03-16",
-    category: { title: "Marketing", href: "#" },
-    author: {
-      name: "Michael Foster",
-      role: "Co-Founder / CTO",
-      href: "#",
-      imageUrl:
-        "https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
-    },
-  },
-];
+const PostForm: React.FC = () => {
+  const queryClient = useQueryClient();
+  const { handleSubmit, control } = useForm<CreatePostRequest>({
+    resolver: zodResolver(createPostRequestSchema),
+  });
 
-export default function Example() {
+  const { mutate, isPending } = useMutation({
+    mutationFn: async (data: CreatePostRequest) => {
+      const response = await fetch("http://localhost:3001/api/v1/post", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(data),
+      });
+      return response.json();
+    },
+
+    mutationKey: ["posts"],
+    onError: (error) => {
+      console.error("Post creation failed: ", error);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
+    },
+  });
+
+  const onSubmit = (data: CreatePostRequest) => {
+    mutate(data);
+  };
+
   return (
-    <div className='bg-white py-24 sm:py-32 h-max'>
-      <div className='mx-auto max-w-7xl px-6 lg:px-8'>
+    <form
+      className='flex flex-col gap-5 mt-5'
+      onSubmit={handleSubmit(onSubmit)}>
+      <Controller
+        name='title'
+        control={control}
+        render={({ field }) => (
+          <InputField label='Title' id='title' rows={1} {...field} />
+        )}
+      />
+      <Controller
+        name='content'
+        control={control}
+        render={({ field }) => (
+          <InputField
+            label='Create your post'
+            id='content'
+            rows={5}
+            {...field}
+          />
+        )}
+      />
+      <AppButton title='Post' isLoading={isPending} type='submit' />
+    </form>
+  );
+};
+export default function Feed() {
+  const { data: posts, isLoading } = useQuery<PostResponse[]>({
+    queryKey: ["posts"],
+    queryFn: async () => {
+      const response = await fetch("http://localhost:3001/api/v1/posts", {
+        headers: {
+          "Content-Type": "application/json",
+        },
+
+        credentials: "include",
+      });
+      const data = await response.json();
+      return data;
+    },
+  });
+
+  return (
+    <div className='bg-white py-24 sm:py-32 min-h-full'>
+      <div className='mx-auto max-w-7xl px-6 lg:px-8 '>
         <div className='mx-auto max-w-2xl lg:mx-0'>
           <h2 className='text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl'>
             From the blog
@@ -135,11 +99,16 @@ export default function Example() {
             Learn how to grow your business with our expert advice.
           </p>
         </div>
-        <div className='mx-auto mt-10 border-t border-gray-200 pt-10 sm:mt-16 sm:pt-16'>
-          {posts.map((post) => (
-            <PostItem post={post} key={post.id} />
-          ))}
-        </div>
+        <PostForm />
+        {!isLoading && posts?.length ? (
+          <div className='mx-auto mt-10 border-t border-gray-200 pt-10 sm:mt-16 sm:pt-16'>
+            {posts?.map((post) => (
+              <PostItem post={post} key={post._id.toString()} />
+            ))}
+          </div>
+        ) : (
+          <div>Loading...</div>
+        )}
       </div>
       <CommentPanel />
     </div>
