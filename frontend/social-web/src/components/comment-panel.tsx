@@ -9,16 +9,142 @@ import {
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMemo } from "react";
-import { PostItem } from "./post-item";
-import { posts } from "@/app/feed/page";
+
 import { InputField } from "./input";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  CommentResponse,
+  CreateCommentRequest,
+  createCommentRequestSchema,
+  PostResponse,
+} from "shared-schema";
+import { PostItem } from "./post-item";
+import { CommentComp } from "./author-comp";
+import { AppButton } from "./button";
+import { Controller, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+
+const PostCommentForm: React.FC = () => {
+  const searchParams = useSearchParams();
+  const post_id = searchParams.get("id");
+
+  const queryClient = useQueryClient();
+
+  const { handleSubmit, control } = useForm<CreateCommentRequest>({
+    resolver: zodResolver(createCommentRequestSchema),
+  });
+
+  const { mutate, isPending } = useMutation({
+    mutationFn: async (data: CreateCommentRequest) => {
+      const response = await fetch(
+        `http://localhost:3001/api/v1/post/${post_id}/comment`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify(data),
+        }
+      );
+      return response.json();
+    },
+    mutationKey: [`/${post_id}/comments`],
+    onError: (error) => {
+      console.error("Comment creation failed: ", error);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/${post_id}/comments`] });
+    },
+  });
+
+  const onSubmit = (data: CreateCommentRequest) => {
+    mutate(data);
+  };
+
+  return (
+    <form
+      className='grid grid-rows-2 grid-flow-col gap-4 mt-10'
+      onSubmit={handleSubmit(onSubmit)}>
+      <Controller
+        name='content'
+        control={control}
+        render={({ field }) => (
+          <InputField
+            autoComplete='off'
+            label='Comment'
+            placeholder='Add a comment'
+            id='comment'
+            required
+            className='row-start-1 row-span-3 col-span-7'
+            {...field}
+          />
+        )}
+      />
+      <AppButton title={"Comment"} type='submit' isLoading={isPending} />
+    </form>
+  );
+};
+
+const PostComponent = () => {
+  const searchParams = useSearchParams();
+
+  const { data: post, isLoading } = useQuery<PostResponse>({
+    queryKey: ["post"],
+    queryFn: async () => {
+      const response = await fetch(
+        `http://localhost:3001/api/v1/post/${searchParams.get("id")}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+
+          credentials: "include",
+        }
+      );
+      const data = await response.json();
+      return data;
+    },
+  });
+  return (
+    <div className='grid grid-cols-1 gap-4'>
+      {isLoading ? (
+        <div>Loading...</div>
+      ) : post ? (
+        <PostItem post={post} />
+      ) : (
+        <div>No posts found</div>
+      )}
+    </div>
+  );
+};
 
 export default function CommentPanel() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  const post_id = searchParams.get("id");
+
   const isOpen = useMemo(() => searchParams.has("id"), [searchParams]);
   const closePanel = () => router.push("/feed");
+
+  const { data: comments, isLoading } = useQuery<CommentResponse[]>({
+    queryKey: [`/${post_id}/comments`],
+    queryFn: async () => {
+      const response = await fetch(
+        `http://localhost:3001/api/v1/post/${post_id}/comments`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+
+          credentials: "include",
+        }
+      );
+      const data = await response.json();
+      return data;
+    },
+  });
 
   return (
     <Dialog className='relative z-10' open={isOpen} onClose={closePanel}>
@@ -65,25 +191,23 @@ export default function CommentPanel() {
                 </div>
                 <div className='relative flex-1 sm:px-6'>
                   <div className='border-b border-gray-200 mt-10 mb-5'>
-                    <PostItem post={posts[0]} />
+                    <PostComponent />
                   </div>
-                  <div className='grid grid-rows-2 grid-flow-col gap-4'>
-                    <InputField
-                      autoComplete='off'
-                      label='Comment'
-                      placeholder='Add a comment'
-                      type='text'
-                      name='comment'
-                      id='comment'
-                      required
-                      className='row-start-1 row-span-3 col-span-7'
-                    />
-                    <button
-                      type='submit'
-                      className='row-start-2 row-end-4 px-4 py-1 text-sm font-semibold text-white bg-indigo-600 rounded-md hover:bg-indigo-700'>
-                      Comment
-                    </button>
-                  </div>
+                  {isLoading ? (
+                    <div>Loading...</div>
+                  ) : comments?.length ? (
+                    comments.map((comment) => (
+                      <CommentComp
+                        key={comment._id.toString()}
+                        title={comment.author.name}
+                        description={comment.content}
+                      />
+                    ))
+                  ) : (
+                    <div>No comments found</div>
+                  )}
+
+                  <PostCommentForm />
                 </div>
               </div>
             </DialogPanel>
