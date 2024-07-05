@@ -12,7 +12,7 @@ import {
   UpdateCommentRequest,
   UpdatePostRequest,
   UserResponse,
-} from 'shared-schema';
+} from '@app/dto';
 import { User } from '@app/common';
 
 @Injectable()

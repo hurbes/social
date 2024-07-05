@@ -6,7 +6,7 @@ import {
   commentResponseSchema,
   CreateCommentRequest,
   UpdateCommentRequest,
-} from 'shared-schema';
+} from '@app/dto';
 
 @Injectable()
 export class CommentService {

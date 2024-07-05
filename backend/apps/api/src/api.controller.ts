@@ -14,27 +14,28 @@ import {
 } from '@nestjs/common';
 import { Response } from 'express';
 import { ApiService } from './api.service';
-import {
-  CommentResponse,
-  CreateCommentRequest,
-  createCommentRequestSchema,
-  CreatePostRequest,
-  createPostRequestSchema,
-  CreateUserRequest,
-  createUserSchema,
-  existingUserRequest,
-  ExistingUserRequest,
-  PostResponse,
-  UpdateCommentRequest,
-  UpdatePostRequest,
-  updatePostRequestSchema,
-  UserResponse,
-  userResponseSchema,
-} from 'shared-schema';
+
 import { Types } from 'mongoose';
 import { AuthGuard, UserRequest } from '@app/common';
 import { UserInterceptor } from '@app/common/interceptors/user.interceptor';
 import { ZodValidationPipe } from '@app/dto';
+import {
+  CommentResponse,
+  CreateCommentRequest,
+  createCommentRequestSchema,
+  PostResponse,
+  CreatePostRequest,
+  createPostRequestSchema,
+  UpdatePostRequest,
+  updatePostRequestSchema,
+  ExistingUserRequest,
+  existingUserRequest,
+  CreateUserRequest,
+  createUserSchema,
+  UserResponse,
+  userResponseSchema,
+  UpdateCommentRequest,
+} from '@app/dto';
 
 @Controller('api/v1')
 export class ApiController {
@@ -126,7 +127,7 @@ export class ApiController {
 
   @UseGuards(AuthGuard)
   @UseInterceptors(UserInterceptor)
-  // @UsePipes(new ZodValidationPipe(createCommentRequestSchema))
+  @UsePipes(new ZodValidationPipe(createCommentRequestSchema))
   @Post('post/:id/comment')
   createComment(
     @Body() comment: CreateCommentRequest,

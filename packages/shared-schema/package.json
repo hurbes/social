@@ -5,7 +5,9 @@
   "description": "",
   "workspaces": [
     "packages/*",
-    "frontend/*"
+    "frontend/*",
+    "backend/*",
+    "backend/apps/*"
   ],
   "scripts": {
     "build": "tsc",

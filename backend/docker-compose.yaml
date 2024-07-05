@@ -13,6 +13,24 @@ services:
     env_file:
       - .env
 
+  api:
+    build:
+      context: .
+      dockerfile: ./apps/api/Dockerfile
+      target: development
+    command: npm run start:dev api
+    depends_on:
+      - mongo
+      - auth
+      - posts
+      - redis
+      - rabbitmq
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    ports:
+      - 3001:3001
+
   auth:
     build:
       context: .
@@ -42,12 +60,33 @@ services:
     depends_on:
       - mongo
       - redis
+      - auth
       - rabbitmq
     volumes:
       - .:/usr/src/app
       - /usr/src/app/node_modules
     ports:
       - 3500:3500
+
+  comment:
+    build:
+      context: .
+      dockerfile: ./apps/comment/Dockerfile
+      target: development
+    command: npm run start:dev comment
+    env_file:
+      - .env
+    depends_on:
+      - mongo
+      - redis
+      - auth
+      - posts
+      - rabbitmq
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    ports:
+      - 3002:30002
 
   redis:
     image: redis

@@ -7,11 +7,7 @@ import {
   Payload,
   RmqContext,
 } from '@nestjs/microservices';
-import {
-  CreatePostRequest,
-  PostResponse,
-  UpdatePostRequest,
-} from 'shared-schema';
+import { CreatePostRequest, PostResponse, UpdatePostRequest } from '@app/dto';
 
 @Controller()
 export class PostsController {

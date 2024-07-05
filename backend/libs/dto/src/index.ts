@@ -1,5 +1,7 @@
 export * from './pipes/zod-validation.pipe';
 
+export * from './schema/author/auth.schema';
+
 export * from './schema/user/create-user.request';
 export * from './schema/user/existing-user.request';
 export * from './schema/user/user.response';

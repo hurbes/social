@@ -15,7 +15,7 @@ import {
   ExistingUserRequest,
   UserResponse,
   userResponseSchema,
-} from 'shared-schema';
+} from '@app/dto';
 
 @Injectable()
 export class AppService {

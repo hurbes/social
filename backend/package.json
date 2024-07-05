@@ -1,5 +1,6 @@
 {
   "name": "auth",
+  "type": "module",
   "version": "0.0.1",
   "description": "",
   "author": "",
@@ -43,6 +44,7 @@
     "reflect-metadata": "^0.2.2",
     "rimraf": "^5.0.7",
     "rxjs": "^7.8.1",
+    "shared-schema": "file:../packages/shared-schema",
     "zod": "^3.23.8"
   },
   "devDependencies": {

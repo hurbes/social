@@ -14,7 +14,7 @@ import {
   CreateUserRequest,
   ExistingUserRequest,
   UserResponse,
-} from 'shared-schema';
+} from '@app/dto';
 
 @Controller()
 export class AppController {

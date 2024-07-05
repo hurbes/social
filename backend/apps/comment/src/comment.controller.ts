@@ -8,7 +8,7 @@ import {
 
 import { CommentService } from './comment.service';
 import { SharedService } from '@app/common';
-import { CreateCommentRequest, UpdateCommentRequest } from 'shared-schema';
+import { CreateCommentRequest, UpdateCommentRequest } from '@app/dto';
 
 @Controller()
 export class CommentController {
