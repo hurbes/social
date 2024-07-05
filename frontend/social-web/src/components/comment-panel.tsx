@@ -64,24 +64,27 @@ const PostCommentForm: React.FC = () => {
 
   return (
     <form
-      className='grid grid-rows-2 grid-flow-col gap-4 mt-10'
+      className='flex items-start gap-4 mt-10'
       onSubmit={handleSubmit(onSubmit)}>
-      <Controller
-        name='content'
-        control={control}
-        render={({ field }) => (
-          <InputField
-            autoComplete='off'
-            label='Comment'
-            placeholder='Add a comment'
-            id='comment'
-            required
-            className='row-start-1 row-span-3 col-span-7'
-            {...field}
-          />
-        )}
-      />
-      <AppButton title={"Comment"} type='submit' isLoading={isPending} />
+      <div className='flex-grow'>
+        <Controller
+          name='content'
+          control={control}
+          render={({ field }) => (
+            <InputField
+              autoComplete='off'
+              label='Comment'
+              placeholder='Add a comment'
+              id='comment'
+              required
+              {...field}
+            />
+          )}
+        />
+      </div>
+      <div className='mt-7'>
+        <AppButton title='Comment' type='submit' isLoading={isPending} />
+      </div>
     </form>
   );
 };
@@ -198,6 +201,7 @@ export default function CommentPanel() {
                   ) : comments?.length ? (
                     comments.map((comment) => (
                       <CommentComp
+                        id={comment._id.toString()}
                         key={comment._id.toString()}
                         title={comment.author.name}
                         description={comment.content}
