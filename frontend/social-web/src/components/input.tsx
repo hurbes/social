@@ -2,10 +2,12 @@ import { cn } from "@/libs/util";
 import React from "react";
 
 interface InputFieldProps
-  extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
+  extends React.InputHTMLAttributes<HTMLInputElement | HTMLTextAreaElement> {
   label: string;
   id: string;
   error?: string;
+  multiline?: boolean;
+  rows?: number;
 }
 
 export const InputField: React.FC<InputFieldProps> = ({
@@ -13,8 +15,12 @@ export const InputField: React.FC<InputFieldProps> = ({
   id,
   error,
   className,
+  multiline = false,
+  rows = 3,
   ...props
 }) => {
+  const InputComponent = multiline ? ("textarea" as const) : ("input" as const);
+
   return (
     <div className={cn(className, { "mb-2": error })}>
       <label
@@ -22,8 +28,9 @@ export const InputField: React.FC<InputFieldProps> = ({
         className='block text-sm font-medium text-gray-900 mb-2'>
         {label}
       </label>
-      <textarea
+      <InputComponent
         id={id}
+        {...(multiline ? { rows } : {})}
         {...props}
         className={cn(
           "block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6",

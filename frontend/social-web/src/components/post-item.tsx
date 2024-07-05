@@ -81,6 +81,7 @@ export const PostItem: React.FC<PostItemProps> = ({ post }) => {
         </div>
       </div>
       <CommentComp
+        id={post.author._id?.toString()}
         title={post.author.name}
         description={post.author._id.toString()}
       />
