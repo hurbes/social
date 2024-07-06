@@ -7,65 +7,19 @@ import {
   TransitionChild,
 } from "@headlessui/react";
 
-import { useRouter, useSearchParams } from "next/navigation";
-import { useMemo } from "react";
-
 import { InputField } from "./input";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  CommentResponse,
-  CreateCommentRequest,
-  createCommentRequestSchema,
-  PostResponse,
-} from "shared-schema";
 import { PostItem } from "./post-item";
 import { CommentComp } from "./author-comp";
 import { AppButton } from "./button";
-import { Controller, useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { Controller } from "react-hook-form";
+import { useFetchPostById } from "@/hooks/posts.hook";
+import { useCreateComment, useFetchComments } from "@/hooks/comments.hook";
 
 const PostCommentForm: React.FC = () => {
-  const searchParams = useSearchParams();
-  const post_id = searchParams.get("id");
-
-  const queryClient = useQueryClient();
-
-  const { handleSubmit, control } = useForm<CreateCommentRequest>({
-    resolver: zodResolver(createCommentRequestSchema),
-  });
-
-  const { mutate, isPending } = useMutation({
-    mutationFn: async (data: CreateCommentRequest) => {
-      const response = await fetch(
-        `http://localhost:3001/api/v1/post/${post_id}/comment`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-          body: JSON.stringify(data),
-        }
-      );
-      return response.json();
-    },
-    mutationKey: [`/${post_id}/comments`],
-    onError: (error) => {
-      console.error("Comment creation failed: ", error);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/${post_id}/comments`] });
-    },
-  });
-
-  const onSubmit = (data: CreateCommentRequest) => {
-    mutate(data);
-  };
+  const { handleSubmit, control, isPending } = useCreateComment();
 
   return (
-    <form
-      className='flex items-start gap-4 mt-10'
-      onSubmit={handleSubmit(onSubmit)}>
+    <form className='flex items-start gap-4 mt-10' onSubmit={handleSubmit}>
       <div className='flex-grow'>
         <Controller
           name='content'
@@ -90,25 +44,7 @@ const PostCommentForm: React.FC = () => {
 };
 
 const PostComponent = () => {
-  const searchParams = useSearchParams();
-
-  const { data: post, isLoading } = useQuery<PostResponse>({
-    queryKey: ["post"],
-    queryFn: async () => {
-      const response = await fetch(
-        `http://localhost:3001/api/v1/post/${searchParams.get("id")}`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-
-          credentials: "include",
-        }
-      );
-      const data = await response.json();
-      return data;
-    },
-  });
+  const { post, isLoading } = useFetchPostById();
   return (
     <div className='grid grid-cols-1 gap-4'>
       {isLoading ? (
@@ -123,31 +59,7 @@ const PostComponent = () => {
 };
 
 export default function CommentPanel() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-
-  const post_id = searchParams.get("id");
-
-  const isOpen = useMemo(() => searchParams.has("id"), [searchParams]);
-  const closePanel = () => router.push("/feed");
-
-  const { data: comments, isLoading } = useQuery<CommentResponse[]>({
-    queryKey: [`/${post_id}/comments`],
-    queryFn: async () => {
-      const response = await fetch(
-        `http://localhost:3001/api/v1/post/${post_id}/comments`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-
-          credentials: "include",
-        }
-      );
-      const data = await response.json();
-      return data;
-    },
-  });
+  const { comments, isLoading, isOpen, closePanel } = useFetchComments();
 
   return (
     <Dialog className='relative z-10' open={isOpen} onClose={closePanel}>
@@ -198,7 +110,7 @@ export default function CommentPanel() {
                   </div>
                   {isLoading ? (
                     <div>Loading...</div>
-                  ) : comments?.length ? (
+                  ) : (
                     comments.map((comment) => (
                       <CommentComp
                         id={comment._id.toString()}
@@ -207,8 +119,6 @@ export default function CommentPanel() {
                         description={comment.content}
                       />
                     ))
-                  ) : (
-                    <div>No comments found</div>
                   )}
 
                   <PostCommentForm />
