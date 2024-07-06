@@ -53,8 +53,20 @@ export class ApiService {
     ) as CommentResponse;
   }
 
-  async deleteComment(id: string): Promise<void> {
-    this.commentService.send<void, string>({ cmd: 'delete-comment' }, id);
+  async deleteComment(id: string, author_id: string): Promise<boolean> {
+    return this.commentService.send<
+      boolean,
+      {
+        id: string;
+        author_id: string;
+      }
+    >(
+      { cmd: 'delete-comment' },
+      {
+        id: id,
+        author_id,
+      },
+    ) as any;
   }
 
   async getPosts(): Promise<PostResponse[]> {
@@ -140,6 +152,7 @@ export class ApiService {
       sameSite: 'none',
       maxAge: 60 * 60 * 24 * 7,
     });
+
     return user;
   }
 

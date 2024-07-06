@@ -19,12 +19,24 @@
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": false,
     "paths": {
-      "@app/common": ["libs/common/src"],
-      "@app/common/*": ["libs/common/src/*"],
-      "@app/dto": ["libs/dto/src"],
-      "@app/dto/*": ["libs/dto/src/*"],
-      "@/packages/shared-schema": ["../packages/shared-schema/src/*"],
-      "@/packages/shared-schema/*": ["../packages/shared-schema/src/*"]
+      "@app/common": [
+        "libs/common/src"
+      ],
+      "@app/common/*": [
+        "libs/common/src/*"
+      ],
+      "@app/dto": [
+        "libs/dto/src"
+      ],
+      "@app/dto/*": [
+        "libs/dto/src/*"
+      ],
+      "@/packages/shared-schema": [
+        "../packages/shared-schema/src/*"
+      ],
+      "@/packages/shared-schema/*": [
+        "../packages/shared-schema/src/*"
+      ]
     }
   }
 }

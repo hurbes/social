@@ -62,7 +62,6 @@ export class AppController {
   }
 
   @MessagePattern({ cmd: 'verify-jwt' })
-  @UseGuards(JwtGuard)
   async verifyJwt(
     @Ctx() context: RmqContext,
     @Payload() payload: { cookie: string },

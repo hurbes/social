@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Param,
+  Patch,
   Post,
   Put,
   Req,
@@ -121,13 +122,11 @@ export class ApiController {
   @UseGuards(AuthGuard)
   @Get('post/:id/comments')
   getComments(@Param() id: { id: string }): Promise<CommentResponse[]> {
-    console.log('id', id.id);
     return this.apiService.getComments(id.id);
   }
 
   @UseGuards(AuthGuard)
   @UseInterceptors(UserInterceptor)
-  @UsePipes(new ZodValidationPipe(createCommentRequestSchema))
   @Post('post/:id/comment')
   createComment(
     @Body() comment: CreateCommentRequest,
@@ -139,22 +138,34 @@ export class ApiController {
       author: request.user,
       post_id: new Types.ObjectId(id.id),
     };
-    console.log('commentWithUser', commentWithUser, comment, request.user);
 
     return this.apiService.createComment(commentWithUser);
   }
 
   @UseGuards(AuthGuard)
-  @Put('comment')
+  @UseInterceptors(UserInterceptor)
+  @Patch('post/comment/:id')
   updateComment(
     @Body() comment: UpdateCommentRequest,
+    @Req() request: UserRequest,
+    @Param() id: { id: string },
   ): Promise<CommentResponse> {
-    return this.apiService.updateComment(comment);
+    const updatedComment = {
+      content: comment.content,
+      _id: new Types.ObjectId(id.id),
+      author_id: request.user._id,
+    };
+    return this.apiService.updateComment(updatedComment);
   }
 
   @UseGuards(AuthGuard)
-  @Delete('comment/:id')
-  deleteComment(@Param() id: string): Promise<void> {
-    return this.apiService.deleteComment(id);
+  @UseInterceptors(UserInterceptor)
+  @Delete('post/comment/:id')
+  deleteComment(
+    @Param() id: { id: string },
+    @Req() request: UserRequest,
+  ): Promise<void> {
+    const author_id = request.user._id;
+    return this.apiService.deleteComment(id.id, author_id.toString()) as any;
   }
 }
