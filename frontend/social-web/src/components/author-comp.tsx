@@ -1,13 +1,7 @@
-import React, { useMemo, useState } from "react";
-import { useForm, Controller } from "react-hook-form";
-import {
-  UpdateCommentRequest,
-  updateCommentRequestSchema,
-} from "shared-schema"; // Adjust the import path as necessary
-import { zodResolver } from "@hookform/resolvers/zod";
-import { InputField } from "./input"; // Adjust the import path as necessary
-import { useSearchParams } from "next/navigation";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import React, { useMemo } from "react";
+import { Controller } from "react-hook-form";
+import { InputField } from "./input";
+import { useDeleteComment, useUpdateComment } from "@/hooks/comments.hook";
 
 function getRandomAvatarUri(style = "micah") {
   const seed = Math.random().toString();
@@ -25,80 +19,21 @@ export const CommentComp: React.FC<CommentCompProps> = ({
   title,
   description,
 }) => {
-  const searchParams = useSearchParams();
-  const post_id = searchParams.get("id");
-
-  const queryClient = useQueryClient();
-
-  const { mutate: deleteComment, isPending: isDeleting } = useMutation({
-    mutationFn: async ({ id }: { id: string }) => {
-      const response = await fetch(
-        `http://localhost:3001/api/v1/post/comment/${id}`,
-        {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-        }
-      );
-      return response.json();
-    },
-    mutationKey: [`/${post_id}/comments`],
-    onError: (error) => {
-      console.error("Comment creation failed: ", error);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/${post_id}/comments`] });
-    },
-  });
-
-  const { mutate, isPending } = useMutation({
-    mutationFn: async (data: UpdateCommentRequest) => {
-      const response = await fetch(
-        `http://localhost:3001/api/v1/post/comment/${id}`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-          body: JSON.stringify(data),
-        }
-      );
-      return response.json();
-    },
-    mutationKey: [`/${post_id}/comments`],
-    onError: (error) => {
-      console.error("Comment creation failed: ", error);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/${post_id}/comments`] });
-    },
-  });
-
-  const { handleSubmit, control } = useForm<UpdateCommentRequest>({
-    resolver: zodResolver(updateCommentRequestSchema),
-  });
-
   const avatarUri = useMemo(() => getRandomAvatarUri(), []);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editedDescription, setEditedDescription] = useState(description);
 
-  const handleEditClick = () => {
-    setIsEditing(true);
-  };
+  const {
+    control,
+    isEditing,
+    editedDescription,
+    setEditedDescription,
+    handleSubmit,
+    handleEditClick,
+  } = useUpdateComment({
+    comment_content: description,
+    comment_id: id,
+  });
 
-  const handleSaveClick = (data: UpdateCommentRequest) => {
-    // Save the edited description (e.g., send to backend)
-    setIsEditing(false);
-    mutate(data);
-  };
-
-  const handleDeleteClick = () => {
-    // Delete the comment (e.g., send to backend)
-    deleteComment({ id });
-  };
+  const { handleDeleteClick } = useDeleteComment(id);
 
   return (
     <div className='relative mt-8 flex items-center gap-x-4'>
@@ -110,7 +45,7 @@ export const CommentComp: React.FC<CommentCompProps> = ({
       <div className='text-sm leading-6 flex-grow'>
         <p className='font-semibold text-gray-900'>{title}</p>
         {isEditing ? (
-          <form onSubmit={handleSubmit(handleSaveClick)}>
+          <form onSubmit={handleSubmit}>
             <Controller
               name='content'
               control={control}
@@ -133,7 +68,7 @@ export const CommentComp: React.FC<CommentCompProps> = ({
         )}
       </div>
       <button
-        onClick={isEditing ? handleSubmit(handleSaveClick) : handleEditClick}
+        onClick={handleEditClick}
         className='text-blue-500 hover:underline'>
         {isEditing ? (
           <svg

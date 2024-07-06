@@ -4,56 +4,19 @@ import { AppButton } from "@/components/button";
 import CommentPanel from "@/components/comment-panel";
 import { InputField } from "@/components/input";
 import { PostItem } from "@/components/post-item";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  CreatePostRequest,
-  createPostRequestSchema,
-  PostResponse,
-} from "shared-schema";
-import { Controller, useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 
+import { Controller } from "react-hook-form";
+import { useCreatePost, useFetchPosts } from "@/hooks/posts.hook";
 const PostForm: React.FC = () => {
-  const queryClient = useQueryClient();
-  const { handleSubmit, control } = useForm<CreatePostRequest>({
-    resolver: zodResolver(createPostRequestSchema),
-  });
-
-  const { mutate, isPending } = useMutation({
-    mutationFn: async (data: CreatePostRequest) => {
-      const response = await fetch("http://localhost:3001/api/v1/post", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify(data),
-      });
-      return response.json();
-    },
-
-    mutationKey: ["posts"],
-    onError: (error) => {
-      console.error("Post creation failed: ", error);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["posts"] });
-    },
-  });
-
-  const onSubmit = (data: CreatePostRequest) => {
-    mutate(data);
-  };
+  const { handleSubmit, control, isPending } = useCreatePost();
 
   return (
-    <form
-      className='flex flex-col gap-5 mt-5'
-      onSubmit={handleSubmit(onSubmit)}>
+    <form className='flex flex-col gap-5 mt-5' onSubmit={handleSubmit}>
       <Controller
         name='title'
         control={control}
         render={({ field }) => (
-          <InputField label='Title' id='title' rows={1} {...field} />
+          <InputField label='Title' id='title' {...field} />
         )}
       />
       <Controller
@@ -73,21 +36,9 @@ const PostForm: React.FC = () => {
     </form>
   );
 };
-export default function Feed() {
-  const { data: posts, isLoading } = useQuery<PostResponse[]>({
-    queryKey: ["posts"],
-    queryFn: async () => {
-      const response = await fetch("http://localhost:3001/api/v1/posts", {
-        headers: {
-          "Content-Type": "application/json",
-        },
 
-        credentials: "include",
-      });
-      const data = await response.json();
-      return data;
-    },
-  });
+export default function Feed() {
+  const { posts, isLoading } = useFetchPosts();
 
   return (
     <div className='bg-white min-h-screen flex flex-col'>

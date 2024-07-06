@@ -1,51 +1,13 @@
 "use client";
 import React from "react";
 import { InputField } from "@/components/input";
-import { Controller, useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { ExistingUserRequest, existingUserRequest } from "shared-schema";
-import { useMutation } from "@tanstack/react-query";
+import { Controller } from "react-hook-form";
+
 import { AppButton } from "@/components/button";
-import { useRouter } from "next/navigation";
-
-const login = async (data: ExistingUserRequest) => {
-  const result = await fetch("http://localhost:3001/api/v1/auth/login/", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    credentials: "include",
-    body: JSON.stringify(data),
-  });
-
-  if (!result || !result.ok) {
-    throw new Error("Login failed");
-  }
-
-  return result;
-};
+import { useLoginForm } from "@/hooks/auth.hook";
 
 export default function Login() {
-  const router = useRouter();
-  const { handleSubmit, control } = useForm<ExistingUserRequest>({
-    resolver: zodResolver(existingUserRequest),
-  });
-
-  const { mutate, isPending } = useMutation({
-    mutationFn: login,
-    mutationKey: ["login"],
-    onError: (error) => {
-      console.error("Login failed: ", error);
-    },
-    onSuccess: () => {
-      console.log("Login successful");
-      router.push("/");
-    },
-  });
-
-  const onSubmit = (data: ExistingUserRequest) => {
-    mutate(data);
-  };
+  const { handleSubmit, control, isLoading } = useLoginForm();
 
   return (
     <div className='flex min-h-full bg-white h-screen flex-1 flex-col justify-center px-6 py-12 lg:px-8'>
@@ -54,7 +16,7 @@ export default function Login() {
           Sign in to your account
         </h2>
 
-        <form onSubmit={handleSubmit(onSubmit)} className='mt-8 space-y-6'>
+        <form onSubmit={handleSubmit} className='mt-8 space-y-6'>
           <Controller
             name='email'
             control={control}
@@ -88,7 +50,7 @@ export default function Login() {
             )}
           />
 
-          <AppButton title={"Sign In"} type={"submit"} />
+          <AppButton title={"Sign In"} type={"submit"} isLoading={isLoading} />
         </form>
 
         <p className='mt-3 text-center text-sm text-gray-600'>

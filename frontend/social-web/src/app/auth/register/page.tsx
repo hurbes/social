@@ -1,7 +1,12 @@
-import React from "react";
+import { AppButton } from "@/components/button";
 import { InputField } from "@/components/input";
+import { useRegistrationForm } from "@/hooks/auth.hook";
+import React from "react";
+import { Controller } from "react-hook-form";
 
 export default function Registration() {
+  const { handleSubmit, control, isLoading } = useRegistrationForm();
+
   return (
     <div className='flex flex-1 flex-col h-screen bg-white justify-center px-6 py-12 lg:px-8'>
       <div className='sm:mx-auto sm:w-full sm:max-w-sm'>
@@ -11,46 +16,73 @@ export default function Registration() {
       </div>
 
       <div className='mt-10 sm:mx-auto sm:w-full sm:max-w-sm'>
-        <form className='space-y-6' action='#' method='POST'>
-          <InputField
-            label='Name'
-            type='text'
-            id='name'
+        <form className='space-y-6' onSubmit={handleSubmit}>
+          <Controller
             name='name'
-            autoComplete='name'
-            required
+            control={control}
+            defaultValue=''
+            render={({ field, fieldState }) => (
+              <InputField
+                label='Name'
+                type='text'
+                id='name'
+                {...field}
+                autoComplete='name'
+                required
+                error={fieldState.error?.message}
+              />
+            )}
           />
-
-          <InputField
-            label='Email address'
-            type='email'
-            id='email'
+          <Controller
             name='email'
-            autoComplete='email'
-            required
+            control={control}
+            defaultValue=''
+            render={({ field, fieldState }) => (
+              <InputField
+                label='Email address'
+                type='email'
+                id='email'
+                {...field}
+                autoComplete='email'
+                required
+                error={fieldState.error?.message}
+              />
+            )}
           />
-          <InputField
-            label='Password'
-            type='password'
-            id='password'
+          <Controller
             name='password'
-            autoComplete='current-password'
-            required
+            control={control}
+            defaultValue=''
+            render={({ field, fieldState }) => (
+              <InputField
+                label='Password'
+                type='password'
+                id='password'
+                {...field}
+                autoComplete='current-password'
+                required
+                error={fieldState.error?.message}
+              />
+            )}
+          />
+          <Controller
+            name='confirmPassword'
+            control={control}
+            defaultValue=''
+            render={({ field, fieldState }) => (
+              <InputField
+                label='Confirm Password'
+                type='password'
+                id='confirmPassword'
+                {...field}
+                autoComplete='current-password'
+                required
+                error={fieldState.error?.message}
+              />
+            )}
           />
 
-          <InputField
-            label='Confirm Password'
-            type='password'
-            id='password'
-            name='password'
-            autoComplete='current-password'
-            required
-          />
-          <button
-            type='submit'
-            className='flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'>
-            Sign Up
-          </button>
+          <AppButton title={"Sign Up"} type={"submit"} isLoading={isLoading} />
         </form>
 
         <p className='mt-10 text-center text-sm text-gray-500'>
