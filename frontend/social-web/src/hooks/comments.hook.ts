@@ -136,11 +136,12 @@ const useUpdateComment = ({
     },
   });
 
-  const handleEditClick = () => {
-    isEditing ? handleSubmit(handleSaveClick) : handleEditClick();
+  const enableEditing = () => {
+    setIsEditing(true);
   };
 
   const handleSaveClick = (data: UpdateCommentRequest) => {
+    console.log("data", data);
     setIsEditing(false);
     mutate({ comment_id, data });
   };
@@ -150,7 +151,7 @@ const useUpdateComment = ({
     isEditing,
     editedDescription,
     control,
-    handleEditClick,
+    enableEditing,
     handleSaveClick,
     setEditedDescription,
     updateComment: mutate,

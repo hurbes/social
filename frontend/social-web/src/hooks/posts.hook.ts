@@ -28,7 +28,7 @@ const useFetchPosts = () => {
   });
 
   return {
-    posts,
+    posts: posts || [],
     isLoading,
   };
 };

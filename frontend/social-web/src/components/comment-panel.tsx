@@ -9,11 +9,13 @@ import {
 
 import { InputField } from "./input";
 import { PostItem } from "./post-item";
-import { CommentComp } from "./author-comp";
+import { CommentComp } from "./comment-comp";
 import { AppButton } from "./button";
 import { Controller } from "react-hook-form";
 import { useFetchPostById } from "@/hooks/posts.hook";
 import { useCreateComment, useFetchComments } from "@/hooks/comments.hook";
+import { CloseIcon } from "./icons";
+import { Loader } from "./loader";
 
 const PostCommentForm: React.FC = () => {
   const { handleSubmit, control, isPending } = useCreateComment();
@@ -82,19 +84,7 @@ export default function CommentPanel() {
                     onClick={closePanel}>
                     <span className='absolute -inset-2.5' />
                     <span className='sr-only'>Close panel</span>
-                    <svg
-                      xmlns='http://www.w3.org/2000/svg'
-                      fill='none'
-                      viewBox='0 0 24 24'
-                      strokeWidth={1.5}
-                      stroke='currentColor'
-                      className='size-6'>
-                      <path
-                        strokeLinecap='round'
-                        strokeLinejoin='round'
-                        d='M6 18 18 6M6 6l12 12'
-                      />
-                    </svg>
+                    <CloseIcon />
                   </button>
                 </div>
               </TransitionChild>
@@ -109,10 +99,14 @@ export default function CommentPanel() {
                     <PostComponent />
                   </div>
                   {isLoading ? (
-                    <div>Loading...</div>
+                    <div className='flex flex-col items-center justify-center'>
+                      <Loader />
+                    </div>
                   ) : (
                     comments.map((comment) => (
                       <CommentComp
+                        className='mt-5 bg-slate-50 p-2 rounded-lg'
+                        editable={true}
                         id={comment._id.toString()}
                         key={comment._id.toString()}
                         title={comment.author.name}
