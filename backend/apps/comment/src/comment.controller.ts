@@ -48,30 +48,9 @@ export class CommentController {
   @MessagePattern({ cmd: 'delete-comment' })
   deleteComment(
     @Ctx() context: RmqContext,
-    @Payload() post: { post_id: string },
-  ) {
+    @Payload() comment: { id: string; author_id: string },
+  ): Promise<boolean> {
     this.sharedService.acknowledgeMessage(context);
-
-    return this.commentService.deleteComment(post.post_id);
-  }
-
-  @MessagePattern({ cmd: 'like-comment' })
-  likeComment(
-    @Ctx() context: RmqContext,
-    //  @Payload() post: { post_id: string },
-  ) {
-    this.sharedService.acknowledgeMessage(context);
-
-    return this.commentService.likeComment();
-  }
-
-  @MessagePattern({ cmd: 'unlike-comment' })
-  unlikeComment(
-    @Ctx() context: RmqContext,
-    //   @Payload() post: { post_id: string },
-  ) {
-    this.sharedService.acknowledgeMessage(context);
-
-    return this.commentService.unlikeComment();
+    return this.commentService.deleteComment(comment.id, comment.author_id);
   }
 }

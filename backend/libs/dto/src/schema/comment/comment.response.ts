@@ -6,7 +6,7 @@ const commentResponseSchema = z.object({
   _id: z.custom<Types.ObjectId>(),
   post_id: z.custom<Types.ObjectId>(),
   content: z.string(),
-  author: author.required(),
+  author: author,
   is_edited: z.boolean().default(false),
   is_deleted: z.boolean().default(false),
   like_count: z.number().default(0),

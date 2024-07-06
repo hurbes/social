@@ -71,7 +71,8 @@ export abstract class AbstractRepository<TDocument extends AbstractDocument> {
   }
 
   async delete(filterQuery: FilterQuery<TDocument>) {
-    return this.model.deleteOne(filterQuery);
+    await this.model.deleteOne(filterQuery);
+    return true;
   }
 
   async find(filterQuery?: FilterQuery<TDocument>) {

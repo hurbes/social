@@ -24,26 +24,22 @@ export class CommentService {
     return response.map((comment) => commentResponseSchema.parse(comment));
   }
 
-  async updateComment(comment: UpdateCommentRequest) {
+  async updateComment(comment: UpdateCommentRequest): Promise<CommentResponse> {
     const response = await this.commentRepository.upsert(
-      comment as PostComment,
       {
         _id: comment._id,
+        'author._id': comment.author_id,
       },
+      { content: comment.content },
     );
 
     return commentResponseSchema.parse(response);
   }
 
-  async deleteComment(comment_id: string): Promise<void> {
-    await this.commentRepository.delete({ _id: comment_id });
-  }
-
-  async likeComment() {
-    return 'Like a comment';
-  }
-
-  async unlikeComment() {
-    return 'Unlike a comment';
+  async deleteComment(comment_id: string, author_id: string): Promise<boolean> {
+    return this.commentRepository.delete({
+      _id: comment_id,
+      'author._id': author_id,
+    });
   }
 }
