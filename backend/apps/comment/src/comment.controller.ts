@@ -19,7 +19,16 @@ export class CommentController {
   ) {}
 
   @MessagePattern({ cmd: 'comments' })
-  getComments(@Ctx() context: RmqContext, @Payload() post: string) {
+  getComments(
+    @Ctx() context: RmqContext,
+    @Payload()
+    post: {
+      post_id: string;
+      startScore: number;
+      endScore: number;
+      pageSize: number;
+    },
+  ) {
     this.sharedService.acknowledgeMessage(context);
 
     return this.commentService.getComments(post);

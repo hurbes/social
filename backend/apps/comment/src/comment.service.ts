@@ -19,8 +19,23 @@ export class CommentService {
     return commentResponseSchema.parse(response);
   }
 
-  async getComments(post_id: string): Promise<CommentResponse[]> {
-    const response = await this.commentRepository.find({ post_id });
+  async getComments(post: {
+    post_id: string;
+    startScore: number;
+    endScore: number;
+    pageSize: number;
+  }): Promise<CommentResponse[]> {
+    const response = await this.commentRepository.find({
+      filterQuery: {
+        post_id: post.post_id,
+        createdAt: {
+          $gte: new Date(post.startScore * 1000),
+          $lte: new Date(post.endScore * 1000),
+        },
+      },
+      limit: post.pageSize,
+      sort: { createdAt: -1 },
+    });
     return response.map((comment) => commentResponseSchema.parse(comment));
   }
 
