@@ -1,13 +1,14 @@
 import {
+  Injectable,
   CanActivate,
   ExecutionContext,
-  Inject,
-  Injectable,
   UnauthorizedException,
+  Inject,
 } from '@nestjs/common';
-import { Request } from 'express';
 import { ClientProxy } from '@nestjs/microservices';
-import { catchError, Observable, of, switchMap } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
+
+import { Request, Response } from 'express';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -15,32 +16,62 @@ export class AuthGuard implements CanActivate {
     @Inject('AUTH_SERVICE') private readonly authService: ClientProxy,
   ) {}
 
-  canActivate(
-    context: ExecutionContext,
-  ): boolean | Promise<boolean> | Observable<boolean> {
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     if (context.getType() !== 'http') {
       return false;
     }
 
     const request = context.switchToHttp().getRequest<Request>();
-
+    const response = context.switchToHttp().getResponse<Response>();
     const cookie = request.cookies.Authentication;
 
     if (!cookie) return false;
 
-    return this.authService.send({ cmd: 'verify-jwt' }, { cookie }).pipe(
-      switchMap(({ exp }) => {
-        if (!exp) return of(false);
+    try {
+      const { userId, sessionId, exp } = await firstValueFrom(
+        this.authService.send<{
+          userId: string;
+          sessionId: string;
+          exp: number;
+        }>({ cmd: 'verify-jwt' }, { cookie }),
+      );
 
-        const TOKEN_EXP_MS = exp * 1000;
+      const currentTime = Math.floor(Date.now() / 1000);
 
-        const isJwtValid = Date.now() < TOKEN_EXP_MS;
+      if (currentTime < exp) {
+        return true;
+      } else {
+        const refreshToken = request.cookies.RefreshToken;
+        if (!refreshToken) throw new UnauthorizedException();
 
-        return of(isJwtValid);
-      }),
-      catchError(() => {
-        throw new UnauthorizedException();
-      }),
-    );
+        const { jwt: newJwt, refreshToken: newRefreshToken } =
+          await firstValueFrom(
+            this.authService.send<{ jwt: string; refreshToken: string }>(
+              { cmd: 'refresh-jwt' },
+              { userId, sessionId, refreshToken },
+            ),
+          );
+
+        response.cookie('Authentication', newJwt, {
+          httpOnly: true,
+          secure: true,
+          sameSite: 'none',
+          maxAge: 1.8e6,
+          path: '/',
+        });
+
+        response.cookie('Refresh', newRefreshToken, {
+          httpOnly: true,
+          secure: true,
+          sameSite: 'none',
+          maxAge: 1.296e9,
+          path: '/',
+        });
+
+        return true;
+      }
+    } catch (error) {
+      throw new UnauthorizedException();
+    }
   }
 }
