@@ -88,6 +88,46 @@ services:
     ports:
       - 3002:30002
 
+  chat:
+    build:
+      context: .
+      dockerfile: ./apps/chat/Dockerfile
+      target: development
+    command: npm run start:dev chat
+    env_file:
+      - .env
+    depends_on:
+      - mongo
+      - redis
+      - auth
+      - posts
+      - rabbitmq
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    ports:
+      - 3004:3004
+
+  cache:
+    build:
+      context: .
+      dockerfile: ./apps/cache/Dockerfile
+      target: development
+    command: npm run start:dev cache
+    env_file:
+      - .env
+    depends_on:
+      - mongo
+      - redis
+      - auth
+      - posts
+      - rabbitmq
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    ports:
+      - 3005:3005
+
   redis:
     image: redis
     command: /bin/sh -c "redis-server --requirepass $$REDIS_PASS"

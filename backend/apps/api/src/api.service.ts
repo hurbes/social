@@ -188,6 +188,7 @@ export class ApiService {
   }
 
   async getPostById(id: string): Promise<PostResponse> {
+    console.log('post -api service', id);
     return this.cacheService.send<PostResponse, string>(
       { cmd: 'get-post' },
       id,

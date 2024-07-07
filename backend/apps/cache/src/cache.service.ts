@@ -45,12 +45,13 @@ export class CacheService {
    * @returns The requested post details.
    */
   async getPostById(postId: string): Promise<PostResponse> {
+    console.log('post -cache service', postId);
     let post: PostResponse = await this.redisService
       .getRedisClient()
       .hgetall(`post:${postId}`);
     if (!post || Object.keys(post).length === 0) {
       post = await firstValueFrom(
-        this.postService.send({ cmd: 'get-post' }, { post_id: postId }),
+        this.postService.send({ cmd: 'get-post' }, postId),
       );
       if (post) {
         await this.redisService.addPost(
@@ -93,11 +94,12 @@ export class CacheService {
       );
 
       for (const post of posts) {
-        await this.redisService.addPost(
-          post.author._id.toString(),
-          post._id.toString(),
-          post,
-        );
+        if (postResponseSchema.safeParse(post).success)
+          await this.redisService.addPost(
+            post.author._id.toString(),
+            post._id.toString(),
+            post,
+          );
       }
       return posts.map((post: any) => postResponseSchema.parse(post));
     } else {
@@ -105,7 +107,7 @@ export class CacheService {
       const posts = await this.redisService.fetchHashes(
         postIds.map((id) => `post:${id}`),
       );
-      return posts;
+      return posts.map((post: any) => postResponseSchema.parse(post));
     }
   }
   /**

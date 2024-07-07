@@ -6,7 +6,6 @@
     "deleteOutDir": true,
     "webpack": true,
     "tsConfigPath": "tsconfig.json"
-
   },
   "monorepo": true,
   "root": "apps/api",
@@ -47,35 +46,6 @@
         "tsConfigPath": "apps/api/tsconfig.app.json"
       }
     },
- 
-  
-    "cleaner": {
-      "type": "application",
-      "root": "apps/cleaner",
-      "entryFile": "main",
-      "sourceRoot": "apps/cleaner/src",
-      "compilerOptions": {
-        "tsConfigPath": "apps/cleaner/tsconfig.app.json"
-      }
-    },
-    "counter": {
-      "type": "application",
-      "root": "apps/counter",
-      "entryFile": "main",
-      "sourceRoot": "apps/counter/src",
-      "compilerOptions": {
-        "tsConfigPath": "apps/counter/tsconfig.app.json"
-      }
-    },
-    "chat": {
-      "type": "application",
-      "root": "apps/chat",
-      "entryFile": "main",
-      "sourceRoot": "apps/chat/src",
-      "compilerOptions": {
-        "tsConfigPath": "apps/chat/tsconfig.app.json"
-      }
-    },
     "dto": {
       "type": "library",
       "root": "libs/dto",
@@ -92,6 +62,24 @@
       "sourceRoot": "apps/comment/src",
       "compilerOptions": {
         "tsConfigPath": "apps/comment/tsconfig.app.json"
+      }
+    },
+    "chat": {
+      "type": "application",
+      "root": "apps/chat",
+      "entryFile": "main",
+      "sourceRoot": "apps/chat/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/chat/tsconfig.app.json"
+      }
+    },
+    "cache": {
+      "type": "application",
+      "root": "apps/cache",
+      "entryFile": "main",
+      "sourceRoot": "apps/cache/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/cache/tsconfig.app.json"
       }
     }
   }

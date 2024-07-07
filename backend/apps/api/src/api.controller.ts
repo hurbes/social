@@ -105,6 +105,7 @@ export class ApiController {
   @UseGuards(AuthGuard)
   @Get('post/:id')
   getPostById(@Param() id: string): Promise<PostResponse> {
+    console.log('post -api controller', id);
     return this.apiService.getPostById(id);
   }
 
