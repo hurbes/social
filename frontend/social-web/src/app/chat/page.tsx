@@ -1,6 +1,45 @@
-import React from "react";
+"use client";
+import React, { useEffect, useState } from "react";
+import { socket } from "./socket";
 
 const ChatApp = () => {
+  const [isConnected, setIsConnected] = useState(false);
+  const [transport, setTransport] = useState("N/A");
+
+  useEffect(() => {
+    if (socket.connected) {
+      onConnect();
+    }
+
+    function onConnect() {
+      setIsConnected(true);
+      setTransport(socket.io.engine.transport.name);
+
+      socket.io.engine.on("upgrade", (transport) => {
+        setTransport(transport.name);
+      });
+    }
+
+    function onError(data: any) {
+      // handle error logic
+      console.error(data);
+    }
+
+    function onDisconnect() {
+      setIsConnected(false);
+      setTransport("N/A");
+    }
+
+    socket.on("connect", onConnect);
+    socket.on("disconnect", onDisconnect);
+    socket.on("error", onError);
+
+    return () => {
+      socket.off("connect", onConnect);
+      socket.off("disconnect", onDisconnect);
+    };
+  }, []);
+
   const contacts = [
     {
       name: "Alice",
@@ -29,6 +68,10 @@ const ChatApp = () => {
 
   return (
     <div className='flex h-screen overflow-hidden'>
+      <div>
+        <p>Status: {isConnected ? "connected" : "disconnected"}</p>
+        <p>Transport: {transport}</p>
+      </div>
       {/* Sidebar */}
       <div className='w-1/4 bg-white border-r border-gray-300'>
         {/* Sidebar Header */}

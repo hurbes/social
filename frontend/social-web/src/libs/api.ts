@@ -18,6 +18,7 @@ export const createAPIMethods: CreateAPIMethods = async (opts) => {
       "Content-Type": "application/json",
     },
     credentials: "include",
+
     body: JSON.stringify(opts.body),
     signal: opts.signal,
   });
