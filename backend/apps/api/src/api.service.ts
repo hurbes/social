@@ -238,17 +238,27 @@ export class ApiService {
     body: CreateUserRequest,
     response: Response,
   ): Promise<UserResponse> {
-    const $res = this.authService.send<{ user: UserResponse; jwt: string }>(
-      { cmd: 'login' },
-      { ...body },
-    );
-    const { user, jwt } = await firstValueFrom($res);
+    const $res = this.authService.send<{
+      user: UserResponse;
+      jwt: string;
+      refreshToken: string;
+    }>({ cmd: 'login' }, { ...body });
+    const { user, jwt, refreshToken } = await firstValueFrom($res);
 
     response.cookie('Authentication', jwt, {
       httpOnly: true,
       secure: true,
       sameSite: 'none',
-      maxAge: 60 * 60 * 24 * 7,
+      maxAge: 1.8e6,
+      path: '/',
+    });
+
+    response.cookie('Refresh', refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+      maxAge: 1.296e9,
+      path: '/',
     });
 
     return user;

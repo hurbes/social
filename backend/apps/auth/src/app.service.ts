@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  Inject,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -16,13 +17,19 @@ import {
   UserResponse,
   userResponseSchema,
 } from '@app/dto';
-
+import { ClientProxy } from '@nestjs/microservices';
+import { v4 as uuidv4 } from 'uuid';
+import { firstValueFrom } from 'rxjs';
 @Injectable()
 export class AppService {
   constructor(
     private readonly usersRepository: UserRepository,
     private readonly jwtService: JwtService,
+    @Inject('CACHE_SERVICE') private readonly cacheService: ClientProxy,
   ) {}
+
+  private readonly jwtExpiration = 1800; // 30 minutes
+  private readonly refreshTokenExpiration = 1296000; // 15 days
 
   async getUsers(): Promise<UserResponse[]> {
     const result = await this.usersRepository.find({});
@@ -56,9 +63,25 @@ export class AppService {
     return bcrypt.hash(password, 12);
   }
 
+  private async createSession(
+    userId: string,
+  ): Promise<{ jwt: string; refreshToken: string }> {
+    const sessionId = uuidv4();
+    const jwt = await this.jwtService.signAsync(
+      { userId, sessionId },
+      { expiresIn: this.jwtExpiration },
+    );
+    const refreshToken = uuidv4();
+
+    this.cacheService.send(
+      { cmd: 'set-session' },
+      { userId, sessionId, refreshToken, ttl: this.refreshTokenExpiration },
+    );
+    return { jwt, refreshToken };
+  }
+
   async register(newUser: Readonly<CreateUserRequest>): Promise<UserResponse> {
     const { name, email, password } = newUser;
-
     const existingUser = await this.findByEmail(email);
 
     if (existingUser) {
@@ -66,7 +89,6 @@ export class AppService {
     }
 
     const hashedPassword = await this.hashPassword(password);
-
     const savedUser = await this.createUser({
       name,
       email,
@@ -112,7 +134,7 @@ export class AppService {
 
   async login(
     existingUser: Readonly<ExistingUserRequest>,
-  ): Promise<{ user: UserResponse; jwt: string }> {
+  ): Promise<{ user: UserResponse; jwt: string; refreshToken: string }> {
     const { email, password } = existingUser;
     const user = await this.validateUser(email, password);
 
@@ -120,23 +142,62 @@ export class AppService {
       throw new UnauthorizedException();
     }
 
-    const jwt = await this.jwtService.signAsync({ user });
+    const { jwt, refreshToken } = await this.createSession(user._id.toString());
     const userResponse = userResponseSchema.parse(user);
 
-    return { user: userResponse, jwt };
+    return { user: userResponse, jwt, refreshToken };
   }
 
-  async verifyJwt(jwt: string): Promise<{ user: User; exp: number }> {
+  async verifyJwt(
+    jwt: string,
+  ): Promise<{ userId: string; sessionId: string; exp: number }> {
     if (!jwt) {
       throw new UnauthorizedException();
     }
 
     try {
-      const { user, exp } = await this.jwtService.verifyAsync(jwt);
-      return { user, exp };
+      const { userId, sessionId, exp } = this.jwtService.verify(jwt);
+      return { userId, sessionId, exp };
     } catch (error) {
       throw new UnauthorizedException();
     }
+  }
+
+  async refreshJwt(
+    userId: string,
+    sessionId: string,
+    refreshToken: string,
+  ): Promise<{ jwt: string; refreshToken: string }> {
+    const $session = this.cacheService.send(
+      { cmd: 'get-session' },
+      { userId, sessionId },
+    );
+
+    const session = await firstValueFrom($session);
+
+    if (!session || session.refreshToken !== refreshToken) {
+      throw new UnauthorizedException();
+    }
+
+    this.cacheService.send({ cmd: 'delete-session' }, { userId, sessionId });
+
+    const newJwt = await this.jwtService.signAsync(
+      { userId, sessionId },
+      { expiresIn: this.jwtExpiration },
+    );
+    const newRefreshToken = uuidv4();
+
+    this.cacheService.send(
+      { cmd: 'set-session' },
+      {
+        userId,
+        sessionId,
+        refreshToken: newRefreshToken,
+        ttl: this.refreshTokenExpiration,
+      },
+    );
+
+    return { jwt: newJwt, refreshToken: newRefreshToken };
   }
 
   logout(response: Response) {

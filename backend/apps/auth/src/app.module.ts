@@ -15,6 +15,7 @@ import { UserRepository } from './repository/user.repository';
 @Module({
   imports: [
     SharedModule,
+    SharedModule.registerRmq('CACHE_SERVICE', process.env.RABBITMQ_CACHE_QUEUE),
     JwtModule.registerAsync({
       useFactory: (configService: ConfigService) => ({
         privateKey: configService.get('JWT_PRIVATE_KEY').replace(/\\n/g, '\n'),

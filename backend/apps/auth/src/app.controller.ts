@@ -1,4 +1,4 @@
-import { Controller, Inject, UseGuards } from '@nestjs/common';
+import { Controller, Inject } from '@nestjs/common';
 import { AppService } from './app.service';
 import {
   Ctx,
@@ -8,7 +8,6 @@ import {
 } from '@nestjs/microservices';
 import { SharedService } from '@app/common/services/shared.service';
 
-import { JwtGuard } from './guard/jwt.guard';
 import {
   author,
   CreateUserRequest,
