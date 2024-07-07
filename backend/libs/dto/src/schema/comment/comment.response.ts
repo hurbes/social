@@ -10,8 +10,8 @@ const commentResponseSchema = z.object({
   is_edited: z.boolean().default(false),
   is_deleted: z.boolean().default(false),
   like_count: z.number().default(0),
-  createdAt: z.date(),
-  updatedAt: z.date(),
+  createdAt: z.string().pipe(z.coerce.date()),
+  updatedAt: z.string().pipe(z.coerce.date()),
 });
 
 type CommentResponse = z.infer<typeof commentResponseSchema>;

@@ -8,8 +8,8 @@ const userMessageResponseSchema = z
     sender: author,
     receiver: author,
     is_read: z.boolean().default(false),
-    createdAt: z.date().default(() => new Date()),
-    updatedAt: z.date().default(() => new Date()),
+    // createdAt: z.date().default(() => new Date()),
+    // updatedAt: z.date().default(() => new Date()),
   })
   .required();
 

@@ -9,7 +9,6 @@ export * from './services/shared.service';
 export * from './services/radis.service';
 
 export * from './modules/shared.module';
-export * from './modules/radis.module';
 export * from './database/database.module';
 export * from './modules/auth.module';
 

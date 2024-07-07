@@ -1,5 +1,4 @@
 import { Types } from 'mongoose';
-import { use } from 'passport';
 import { z } from 'zod';
 
 const updateCommentRequestSchema = z.object({
