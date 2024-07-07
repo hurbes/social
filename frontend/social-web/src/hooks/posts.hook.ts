@@ -1,8 +1,16 @@
 import { createAPIMethods } from "@/libs/api";
+import { POST_QUERY_LIMIT } from "@/libs/util";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
+import { useEffect } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
+import { useInView } from "react-intersection-observer";
 import {
   CreatePostRequest,
   createPostRequestSchema,
@@ -15,21 +23,68 @@ const fetchPostById = (id: string) =>
     method: "GET",
   });
 
-const fetchPosts = () =>
+const fetchPosts = ({
+  start,
+  end,
+  signal,
+}: {
+  start: number;
+  end: number;
+  signal?: AbortSignal;
+}) =>
   createAPIMethods<any, PostResponse[]>({
-    url: "http://localhost:3001/api/v1/posts",
+    url: `http://localhost:3001/api/v1/posts?start=${start}&end=${end}&limit=${POST_QUERY_LIMIT}`,
     method: "GET",
+    signal,
   });
 
 const useFetchPosts = () => {
-  const { data: posts, isLoading } = useQuery<PostResponse[]>({
+  const { ref, inView } = useInView();
+  const {
+    isPending,
+    error,
+    data,
+    isFetching,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
     queryKey: ["posts"],
-    queryFn: fetchPosts,
+    queryFn: ({ pageParam, signal }) => {
+      return fetchPosts({
+        signal,
+        start: pageParam.start,
+        end: pageParam.end,
+      });
+    },
+    staleTime: 10000,
+    initialPageParam: {
+      start: 0,
+      end: Math.floor(new Date().getTime() / 1000),
+    },
+    getNextPageParam: (lastPage) => {
+      if (!lastPage.length || !lastPage[lastPage.length - 1]) return null;
+
+      const lastPost = lastPage[lastPage.length - 1];
+      const lastPostDate = new Date(lastPost.createdAt);
+      return {
+        start: Math.floor(lastPostDate.getTime() / 1000),
+        end: Math.floor(new Date().getTime() / 1000),
+      };
+    },
   });
 
+  useEffect(() => {
+    if (inView) fetchNextPage();
+  }, [inView, fetchNextPage]);
+
   return {
-    posts: posts || [],
-    isLoading,
+    ref,
+    error,
+    hasNextPage,
+    posts: data?.pages.flatMap((page) => page) || [],
+    isFetchingNextPage,
+    isLoading: isPending,
   };
 };
 

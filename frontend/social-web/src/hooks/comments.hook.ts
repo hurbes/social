@@ -1,9 +1,15 @@
 import { createAPIMethods } from "@/libs/api";
+import { COMMENT_QUERY_LIMIT } from "@/libs/util";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
+import { useInView } from "react-intersection-observer";
 import {
   CommentResponse,
   CreateCommentRequest,
@@ -12,10 +18,21 @@ import {
   updateCommentRequestSchema,
 } from "shared-schema";
 
-const fetchComments = (post_id: string) =>
+const fetchComments = ({
+  post_id,
+  start,
+  end,
+  signal,
+}: {
+  post_id: string;
+  start?: number;
+  end?: number;
+  signal?: AbortSignal;
+}) =>
   createAPIMethods<any, CommentResponse[]>({
-    url: `http://localhost:3001/api/v1/post/${post_id}/comments`,
+    url: `http://localhost:3001/api/v1/post/${post_id}/comments?start=${start}&end=${end}&limit=${COMMENT_QUERY_LIMIT}`,
     method: "GET",
+    signal,
   });
 
 const createComment = ({
@@ -61,17 +78,55 @@ const useFetchComments = () => {
   const isOpen = useMemo(() => searchParams.has("id"), [searchParams]);
   const closePanel = () => router.push("/feed");
 
-  const { data: comments, isLoading } = useQuery<CommentResponse[]>({
-    queryKey: [`/${post_id}/comments`],
-    queryFn: () => fetchComments(post_id!),
-    enabled: !!post_id,
+  const { ref, inView } = useInView();
+  const {
+    isPending,
+    error,
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
+    queryKey: ["posts"],
+    queryFn: ({ pageParam, signal }) => {
+      return fetchComments({
+        post_id: post_id!,
+        signal,
+        start: pageParam.start,
+        end: pageParam.end,
+      });
+    },
+    enabled: isOpen,
+    staleTime: 10000,
+    initialPageParam: {
+      start: 0,
+      end: Math.floor(new Date().getTime() / 1000),
+    },
+    getNextPageParam: (lastPage) => {
+      if (!lastPage.length || !lastPage[lastPage.length - 1]) return null;
+
+      const lastPost = lastPage[lastPage.length - 1];
+      const lastPostDate = new Date(lastPost.createdAt);
+      return {
+        start: Math.floor(lastPostDate.getTime() / 1000),
+        end: Math.floor(new Date().getTime() / 1000),
+      };
+    },
   });
 
+  useEffect(() => {
+    if (inView) fetchNextPage();
+  }, [inView, fetchNextPage]);
+
   return {
-    comments: comments || [],
-    isLoading,
+    ref,
+    error,
     isOpen,
     closePanel,
+    hasNextPage,
+    isLoading: isPending,
+    isFetchingNextPage,
+    comments: data?.pages.flatMap((page) => page) || [],
   };
 };
 
@@ -190,3 +245,10 @@ export {
   useDeleteComment,
   useUpdateComment,
 };
+function fetchPosts(arg0: {
+  signal: AbortSignal;
+  start: number;
+  end: number;
+}): any {
+  throw new Error("Function not implemented.");
+}
