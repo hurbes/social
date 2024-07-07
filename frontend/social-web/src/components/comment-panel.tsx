@@ -16,6 +16,8 @@ import { useFetchPostById } from "@/hooks/posts.hook";
 import { useCreateComment, useFetchComments } from "@/hooks/comments.hook";
 import { CloseIcon } from "./icons";
 import { Loader } from "./loader";
+import { useQueries } from "@tanstack/react-query";
+import { useUser } from "@/hooks/auth.hook";
 
 const PostCommentForm: React.FC = () => {
   const { handleSubmit, control, isPending } = useCreateComment();
@@ -61,7 +63,9 @@ const PostComponent = () => {
 };
 
 export default function CommentPanel() {
-  const { comments, isLoading, isOpen, closePanel } = useFetchComments();
+  const { user } = useUser();
+  const { ref, hasNextPage, comments, isLoading, isOpen, closePanel } =
+    useFetchComments();
 
   return (
     <Dialog className='relative z-10' open={isOpen} onClose={closePanel}>
@@ -106,7 +110,7 @@ export default function CommentPanel() {
                     comments.map((comment) => (
                       <CommentComp
                         className='mt-5 bg-slate-50 p-2 rounded-lg'
-                        editable={true}
+                        editable={user?._id === comment.author._id}
                         id={comment._id.toString()}
                         key={comment._id.toString()}
                         title={comment.author.name}
@@ -114,7 +118,9 @@ export default function CommentPanel() {
                       />
                     ))
                   )}
-
+                  {hasNextPage && (
+                    <div ref={ref} className='h-4 w-full bg-blue-200'></div>
+                  )}
                   <PostCommentForm />
                 </div>
               </div>

@@ -7,23 +7,33 @@ import {
   createUserSchema,
   ExistingUserRequest,
   existingUserRequest,
+  UserResponse,
 } from "shared-schema"; // Adjust the import path as necessary
 import { createAPIMethods } from "@/libs/api";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 
 const fetchLogin = (body: ExistingUserRequest) =>
-  createAPIMethods<ExistingUserRequest, void>({
+  createAPIMethods<ExistingUserRequest, ExistingUserRequest>({
     url: "http://localhost:3001/api/v1/auth/login/",
     method: "POST",
     body,
   });
 
 const fetchRegister = (body: CreateUserRequest) =>
-  createAPIMethods<CreateUserRequest, void>({
+  createAPIMethods<CreateUserRequest, ExistingUserRequest>({
     url: "http://localhost:3001/api/v1/auth/register/",
     method: "POST",
     body,
   });
+
+const useUser = () => {
+  const { data, isLoading } = useQuery<UserResponse>({
+    queryKey: ["login"],
+    networkMode: "offlineFirst",
+  });
+
+  return { user: data, isLoading };
+};
 
 const useLoginForm = () => {
   const router = useRouter();
@@ -32,7 +42,7 @@ const useLoginForm = () => {
     resolver: zodResolver(existingUserRequest),
   });
 
-  const mutation = useMutation({
+  const { mutate, isPending } = useMutation({
     mutationFn: fetchLogin,
     mutationKey: ["login"],
     onError: (error) => {
@@ -45,13 +55,13 @@ const useLoginForm = () => {
   });
 
   const onSubmit = (data: ExistingUserRequest) => {
-    mutation.mutate(data);
+    mutate(data);
   };
 
   return {
     handleSubmit: handleSubmit(onSubmit),
     control,
-    isLoading: mutation.isPending,
+    isLoading: isPending,
   };
 };
 
@@ -85,4 +95,4 @@ const useRegistrationForm = () => {
   };
 };
 
-export { useLoginForm, useRegistrationForm };
+export { useUser, useLoginForm, useRegistrationForm };

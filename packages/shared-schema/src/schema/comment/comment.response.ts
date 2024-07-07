@@ -1,6 +1,6 @@
-import { Types } from 'mongoose';
-import { z } from 'zod';
-import { author } from '../auther/auth.schema';
+import { Types } from "mongoose";
+import { z } from "zod";
+import { author } from "../auther/auth.schema";
 
 const commentResponseSchema = z.object({
   _id: z.custom<Types.ObjectId>(),
@@ -10,8 +10,8 @@ const commentResponseSchema = z.object({
   is_edited: z.boolean().default(false),
   is_deleted: z.boolean().default(false),
   like_count: z.number().default(0),
-  createdAt: z.date(),
-  updatedAt: z.date(),
+  createdAt: z.any(),
+  updatedAt: z.string(),
 });
 
 type CommentResponse = z.infer<typeof commentResponseSchema>;

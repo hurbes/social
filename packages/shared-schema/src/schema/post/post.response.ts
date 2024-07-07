@@ -1,6 +1,6 @@
-import { Types } from 'mongoose';
-import { z } from 'zod';
-import { author } from '../auther/auth.schema';
+import { Types } from "mongoose";
+import { z } from "zod";
+import { author } from "../auther/auth.schema";
 
 const postResponseSchema = z
   .object({
@@ -10,8 +10,8 @@ const postResponseSchema = z
     author: author,
     comment_count: z.number(),
     like_count: z.number(),
-    createdAt: z.date(),
-    updatedAt: z.date(),
+    createdAt: z.any(),
+    updatedAt: z.any(),
     is_edited: z.boolean(),
     is_deleted: z.boolean(),
   })

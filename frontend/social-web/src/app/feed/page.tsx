@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { AppButton } from "@/components/button";
 import CommentPanel from "@/components/comment-panel";
 import { InputField } from "@/components/input";
@@ -8,6 +8,9 @@ import { PostItem } from "@/components/post-item";
 import { Controller } from "react-hook-form";
 import { useCreatePost, useFetchPosts } from "@/hooks/posts.hook";
 import { Loader } from "@/components/loader";
+import { InView, useInView } from "react-intersection-observer";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { start } from "repl";
 const PostForm: React.FC = () => {
   const { handleSubmit, control, isPending } = useCreatePost();
 
@@ -38,8 +41,29 @@ const PostForm: React.FC = () => {
   );
 };
 
+const getPosts = async ({
+  limit = 10,
+  start,
+  end,
+}: {
+  limit: number;
+  start: number;
+  end: number;
+}) => {
+  console.log("pageParam", { limit, start, end });
+  return Promise.resolve(
+    [1, 2, 3, 4, 5].map((i) => ({
+      id: i,
+      title: `Post ${i}`,
+      content: `Content ${i}`,
+      author: `Author ${i}`,
+      createdAt: new Date(),
+    }))
+  );
+};
+
 export default function Feed() {
-  const { posts, isLoading } = useFetchPosts();
+  const { posts, isLoading, hasNextPage, ref } = useFetchPosts();
 
   return (
     <div className='bg-white min-h-screen flex flex-col items-center justify-center'>
@@ -62,11 +86,12 @@ export default function Feed() {
             </p>
           </div>
           <PostForm />
+
           {!isLoading ? (
             <div className='border-t border-gray-200 sm:mt-5 sm:pt-5'>
-              {posts?.map((post) => (
-                <PostItem post={post} key={post._id.toString()} />
-              ))}
+              {posts?.map((post) => {
+                return <PostItem post={post} key={post?._id?.toString()} />;
+              })}
             </div>
           ) : (
             <div className='flex flex-col items-center justify-center h-28'>
@@ -75,6 +100,7 @@ export default function Feed() {
           )}
         </div>
       </div>
+      {hasNextPage && <div ref={ref} className='h-4 w-full bg-blue-200'></div>}
       <CommentPanel />
     </div>
   );

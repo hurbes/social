@@ -8,6 +8,7 @@ export type CreateAPIMethods = <
   method: APIMethod;
   headers?: Record<string, string>;
   body?: TInput;
+  signal?: AbortSignal;
 }) => Promise<TOutput>;
 
 export const createAPIMethods: CreateAPIMethods = async (opts) => {
@@ -18,6 +19,7 @@ export const createAPIMethods: CreateAPIMethods = async (opts) => {
     },
     credentials: "include",
     body: JSON.stringify(opts.body),
+    signal: opts.signal,
   });
 
   if (!response.ok) {
