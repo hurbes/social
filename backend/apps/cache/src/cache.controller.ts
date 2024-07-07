@@ -6,7 +6,13 @@ import {
   Payload,
   RmqContext,
 } from '@nestjs/microservices';
-import { CreatePostRequest, PostResponse, UpdatePostRequest } from '@app/dto';
+import {
+  CreateCommentRequest,
+  CreatePostRequest,
+  PostResponse,
+  UpdateCommentRequest,
+  UpdatePostRequest,
+} from '@app/dto';
 import { SharedService } from '@app/common';
 
 @Controller()
@@ -77,5 +83,55 @@ export class CacheController {
   ): Promise<void> {
     this.sharedService.acknowledgeMessage(context);
     return this.cacheService.deletePost(post);
+  }
+
+  @MessagePattern({ cmd: 'comments' })
+  getComments(
+    @Ctx() context: RmqContext,
+    @Payload()
+    post: {
+      post_id: string;
+      startScore: number;
+      endScore: number;
+      pageSize: number;
+    },
+  ) {
+    this.sharedService.acknowledgeMessage(context);
+
+    return this.cacheService.getCommentsByPostId(
+      post.post_id,
+      post.startScore,
+      post.endScore,
+      post.pageSize,
+    );
+  }
+
+  @MessagePattern({ cmd: 'add-comment' })
+  createComment(
+    @Ctx() context: RmqContext,
+    @Payload() comment: CreateCommentRequest,
+  ) {
+    this.sharedService.acknowledgeMessage(context);
+
+    return this.cacheService.createComment(comment);
+  }
+
+  @MessagePattern({ cmd: 'update-comment' })
+  updateComment(
+    @Ctx() context: RmqContext,
+    @Payload() comment: UpdateCommentRequest,
+  ) {
+    this.sharedService.acknowledgeMessage(context);
+
+    return this.cacheService.updateComment(comment);
+  }
+
+  @MessagePattern({ cmd: 'delete-comment' })
+  deleteComment(
+    @Ctx() context: RmqContext,
+    @Payload() comment: { id: string; author_id: string },
+  ): Promise<boolean> {
+    this.sharedService.acknowledgeMessage(context);
+    return this.cacheService.deleteComment(comment.id, comment.author_id);
   }
 }

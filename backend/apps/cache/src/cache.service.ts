@@ -1,8 +1,12 @@
 import { RedisService } from '@app/common';
 import {
+  CommentResponse,
+  commentResponseSchema,
+  CreateCommentRequest,
   CreatePostRequest,
   PostResponse,
   postResponseSchema,
+  UpdateCommentRequest,
   UpdatePostRequest,
 } from '@app/dto';
 import { Inject, Injectable } from '@nestjs/common';
@@ -13,6 +17,7 @@ export class CacheService {
   constructor(
     private readonly redisService: RedisService,
     @Inject('POST_SERVICE') private readonly postService: ClientProxy,
+    @Inject('COMMENT_SERVICE') private readonly commentService: ClientProxy,
   ) {}
 
   /**
@@ -192,6 +197,123 @@ export class CacheService {
         post_id: post_id,
         author_id: author_id,
       },
+    );
+  }
+
+  // Post methods (already implemented) ...
+
+  /**
+   * Create a comment with caching logic.
+   * Implements write-through caching to ensure cache consistency.
+   * @param commentDetails Details of the comment to create.
+   * @returns Created comment details.
+   */
+  async createComment(
+    commentDetails: CreateCommentRequest,
+  ): Promise<CommentResponse> {
+    const $comment = this.commentService.send(
+      { cmd: 'add-comment' },
+      commentDetails,
+    );
+    const comment: CommentResponse = await firstValueFrom($comment);
+    await this.redisService.addComment(
+      comment.post_id.toString(),
+      comment._id.toString(),
+      comment,
+    );
+
+    return commentResponseSchema.parse(comment);
+  }
+
+  /**
+   * Get comments by post ID with pagination and caching.
+   * Implements read-through caching with pagination support.
+   * @param postId The unique identifier for the post.
+   * @param startScore The starting score for pagination.
+   * @param endScore The ending score for pagination.
+   * @param pageSize The number of items to retrieve.
+   * @returns A list of comments for the requested page.
+   */
+  async getCommentsByPostId(
+    postId: string,
+    startScore: number,
+    endScore: number,
+    pageSize: number,
+  ): Promise<CommentResponse[]> {
+    // Try to fetch comments from Redis cache
+    const commentIds = await this.redisService.getComments(
+      postId,
+      startScore,
+      endScore,
+      pageSize,
+    );
+
+    if (commentIds.length === 0) {
+      // Cache miss: fetch comments from the database
+      const comments: CommentResponse[] = await firstValueFrom(
+        this.commentService.send(
+          { cmd: 'comments' },
+          { post_id: postId, startScore, endScore, pageSize },
+        ),
+      );
+
+      for (const comment of comments) {
+        await this.redisService.addComment(
+          comment.post_id.toString(),
+          comment._id.toString(),
+          comment,
+        );
+      }
+      return comments.map((comment: any) =>
+        commentResponseSchema.parse(comment),
+      );
+    } else {
+      // Cache hit: return comments from Redis
+      const comments = await this.redisService.fetchHashes(
+        commentIds.map((id) => `comment:${id}`),
+      );
+      return comments;
+    }
+  }
+
+  /**
+   * Update a comment with caching logic.
+   * Implements write-through caching for data consistency.
+   * Verifies ownership by checking both comment ID and author ID.
+   * @param commentDetails Details of the comment to update.
+   * @returns The updated comment details.
+   */
+  async updateComment(
+    commentDetails: UpdateCommentRequest,
+  ): Promise<CommentResponse> {
+    console.log('Updating comment in cache', commentDetails);
+    const { _id, author_id } = commentDetails;
+    await this.redisService.updateComment(
+      _id.toString(),
+      author_id.toString(),
+      commentDetails,
+    );
+
+    const updatedComment = await firstValueFrom(
+      this.commentService.send({ cmd: 'update-comment' }, commentDetails),
+    );
+    return commentResponseSchema.parse(updatedComment);
+  }
+
+  /**
+   * Delete a comment with caching logic.
+   * Implements write-through caching for data consistency.
+   * Verifies ownership by checking both comment ID and author ID.
+   * @param commentId The unique identifier for the comment.
+   * @param authorId The unique identifier for the user who authored the comment.
+   */
+  async deleteComment(commentId: string, authorId: string): Promise<boolean> {
+    await this.redisService.deleteComment(commentId);
+    return firstValueFrom(
+      this.commentService.send<boolean>(
+        { cmd: 'delete-comment' },
+        { comment_id: commentId, author_id: authorId },
+      ),
     );
   }
 }

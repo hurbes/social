@@ -148,31 +148,25 @@ export class RedisService {
     updates: any,
   ): Promise<void> {
     const comment = await this.client.hgetall(`comment:${commentId}`);
-    if (comment.author_id === userId) {
-      const flatUpdates = flattenObject(updates);
-      await this.client.hmset(`comment:${commentId}`, flatUpdates);
-      if (updates.timestamp) {
-        const newTimestamp = updates.timestamp;
-        await this.client.zadd(
-          `comments:byPost:${comment.post_id}`,
-          'XX',
-          newTimestamp,
-          commentId,
-        );
-      }
-    } else {
-      throw new Error('Unauthorized');
+
+    const flatUpdates = flattenObject(updates);
+    await this.client.hmset(`comment:${commentId}`, flatUpdates);
+    if (updates.timestamp) {
+      const newTimestamp = updates.timestamp;
+      await this.client.zadd(
+        `comments:byPost:${comment.post_id}`,
+        'XX',
+        newTimestamp,
+        commentId,
+      );
     }
   }
 
-  async deleteComment(commentId: string, userId: string): Promise<void> {
+  async deleteComment(commentId: string): Promise<void> {
     const comment = await this.client.hgetall(`comment:${commentId}`);
-    if (comment.author_id === userId) {
-      await this.client.del(`comment:${commentId}`);
-      await this.client.zrem(`comments:byPost:${comment.post_id}`, commentId);
-    } else {
-      throw new Error('Unauthorized');
-    }
+
+    await this.client.del(`comment:${commentId}`);
+    await this.client.zrem(`comments:byPost:${comment.post_id}`, commentId);
   }
 
   async setTTL(key: string, ttl: number): Promise<void> {
