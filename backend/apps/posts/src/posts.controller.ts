@@ -28,27 +28,38 @@ export class PostsController {
   }
 
   @MessagePattern({ cmd: 'get-posts' })
-  async getPosts(@Ctx() context: RmqContext): Promise<PostResponse[]> {
+  async getPosts(
+    @Ctx() context: RmqContext,
+    @Payload()
+    pagination: { startScore: number; endScore: number; pageSize: number },
+  ): Promise<PostResponse[]> {
+    const { startScore, endScore, pageSize } = pagination;
     this.sharedService.acknowledgeMessage(context);
-    return this.postsService.getPosts();
+    return this.postsService.getPosts(startScore, endScore, pageSize);
   }
 
   @MessagePattern({ cmd: 'user-posts' })
   async getUserPosts(
     @Ctx() context: RmqContext,
-    @Payload() user: { id: string },
+    @Payload()
+    post: {
+      id: { uid: string };
+      startScore: number;
+      endScore: number;
+      pageSize: number;
+    },
   ): Promise<PostResponse[]> {
     this.sharedService.acknowledgeMessage(context);
-    return this.postsService.getUserPosts(user.id);
+    return this.postsService.getUserPosts(post);
   }
 
   @MessagePattern({ cmd: 'get-post' })
   async getPost(
     @Ctx() context: RmqContext,
-    @Payload() post: { id: string },
+    @Payload() post: { post_id: string },
   ): Promise<PostResponse> {
     this.sharedService.acknowledgeMessage(context);
-    return this.postsService.getPostById(post.id);
+    return this.postsService.getPostById(post.post_id);
   }
 
   @MessagePattern({ cmd: 'update-post' })
@@ -63,9 +74,9 @@ export class PostsController {
   @MessagePattern({ cmd: 'delete-post' })
   async deletePost(
     @Ctx() context: RmqContext,
-    @Payload() post: { id: string },
-  ): Promise<void> {
+    @Payload() post: { post_id: string; author_id: string },
+  ): Promise<boolean> {
     this.sharedService.acknowledgeMessage(context);
-    return this.postsService.deletePost(post.id);
+    return this.postsService.deletePost(post);
   }
 }

@@ -4,8 +4,6 @@ import { PostsService } from './posts.service';
 
 import {
   DatabaseModule,
-  RedisModule,
-  RedisCacheService,
   UserPost,
   UserPostSchema,
   SharedService,
@@ -24,13 +22,11 @@ import { PostRepository } from './repository/post.repository';
       },
     ]),
     DatabaseModule,
-    RedisModule,
   ],
   controllers: [PostsController],
   providers: [
     PostsService,
     PostRepository,
-    RedisCacheService,
     {
       provide: 'SharedServiceInterface',
       useClass: SharedService,
