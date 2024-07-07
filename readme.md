@@ -130,10 +130,10 @@ graph TD
     F -->|Fetch Data| G[MongoDB]
     G -->|Return Data| F
     F -->|Update Cache| D
-    E --> B
-    B --> A
-    H[MQTT] --> F
-    H --> D
+    E -->|Return Data| B
+    B -->|Return Response| A
+    H[MQTT] -->|Notify Update| F
+    H -->|Notify Update| D
 ```
 
 ### Explanation
