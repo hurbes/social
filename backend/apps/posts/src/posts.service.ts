@@ -20,6 +20,7 @@ export class PostsService {
   }
 
   async getPostById(post_id: string): Promise<PostResponse> {
+    console.log('post -post service', post_id);
     const post = await this.postRepository.findOne({
       _id: post_id,
     });
@@ -44,6 +45,8 @@ export class PostsService {
       limit: limit,
     });
 
+    if (!post.length) return [];
+    console.log('post-data', post);
     return post.map((p) => postResponseSchema.parse(p));
   }
 
@@ -67,7 +70,8 @@ export class PostsService {
       },
       limit: postParams.pageSize,
     });
-
+    if (!post.length) return [];
+    console.log('post-data-data', post);
     return post.map((p) => postResponseSchema.parse(p));
   }
 

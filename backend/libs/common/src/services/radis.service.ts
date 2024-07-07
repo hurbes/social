@@ -26,7 +26,7 @@ export class RedisService {
     return results.map(([err, hash]) => {
       if (err) throw err; // Handle any errors from the pipeline
 
-      return hash;
+      return unflattenObject(hash);
     });
   }
 
@@ -67,6 +67,7 @@ export class RedisService {
       0,
       pageSize,
     );
+    if (!postIds.length) return [];
     console.log('Fetched post IDs:', postIds);
     return this.fetchHashes(postIds.map((id) => `post:${id}`));
   }
@@ -85,6 +86,7 @@ export class RedisService {
       0,
       pageSize,
     );
+    if (!postIds.length) return [];
     return this.fetchHashes(postIds.map((id) => `post:${id}`));
   }
 
@@ -139,6 +141,7 @@ export class RedisService {
       0,
       pageSize,
     );
+    if (!commentIds.length) return [];
     return this.fetchHashes(commentIds.map((id) => `comment:${id}`));
   }
 
