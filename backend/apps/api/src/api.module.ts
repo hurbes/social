@@ -1,7 +1,18 @@
 import { Module } from '@nestjs/common';
 import { ApiController } from './api.controller';
 import { ApiService } from './api.service';
-import { AuthModule, SharedModule } from '@app/common';
+import {
+  AuthModule,
+  DatabaseModule,
+  PostComment,
+  PostCommentSchema,
+  SharedModule,
+  User,
+  UserPost,
+  UserPostSchema,
+  UserSchema,
+} from '@app/common';
+import { MongooseModule } from '@nestjs/mongoose';
 
 @Module({
   imports: [
@@ -12,6 +23,22 @@ import { AuthModule, SharedModule } from '@app/common';
       'COMMENT_SERVICE',
       process.env.RABBITMQ_COMMENT_QUEUE,
     ),
+    SharedModule.registerRmq('CACHE_SERVICE', process.env.RABBITMQ_CACHE_QUEUE),
+    MongooseModule.forFeature([
+      {
+        name: PostComment.name,
+        schema: PostCommentSchema,
+      },
+      {
+        name: User.name,
+        schema: UserSchema,
+      },
+      {
+        name: UserPost.name,
+        schema: UserPostSchema,
+      },
+    ]),
+    DatabaseModule,
   ],
   controllers: [ApiController],
   providers: [ApiService],

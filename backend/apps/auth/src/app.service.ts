@@ -25,7 +25,7 @@ export class AppService {
   ) {}
 
   async getUsers(): Promise<UserResponse[]> {
-    const result = await this.usersRepository.find();
+    const result = await this.usersRepository.find({});
     return result.map((user) => userResponseSchema.parse(user));
   }
 

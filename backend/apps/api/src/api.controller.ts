@@ -7,6 +7,7 @@ import {
   Patch,
   Post,
   Put,
+  Query,
   Req,
   Res,
   UseGuards,
@@ -23,12 +24,10 @@ import { ZodValidationPipe } from '@app/dto';
 import {
   CommentResponse,
   CreateCommentRequest,
-  createCommentRequestSchema,
   PostResponse,
   CreatePostRequest,
   createPostRequestSchema,
   UpdatePostRequest,
-  updatePostRequestSchema,
   ExistingUserRequest,
   existingUserRequest,
   CreateUserRequest,
@@ -78,14 +77,29 @@ export class ApiController {
 
   @UseGuards(AuthGuard)
   @Get('posts')
-  getPosts(): Promise<PostResponse[]> {
-    return this.apiService.getPosts();
+  getPosts(
+    @Query('start') startScore: number,
+    @Query('end') endScore: number,
+    @Query('limit') limit: number,
+  ): Promise<PostResponse[]> {
+    return this.apiService.getPosts(startScore, endScore, limit);
   }
 
   @UseGuards(AuthGuard)
-  @Get('posts/user/:id')
-  getUserPosts(@Param() uid: string): Promise<PostResponse[]> {
-    return this.apiService.getUserPosts(uid);
+  @Get('posts/user/:uid')
+  getUserPosts(
+    @Param() uid: { uid: string },
+    @Query('start') startScore: number,
+    @Query('end') endScore: number,
+    @Query('limit') limit: number,
+  ): Promise<PostResponse[]> {
+    console.log('uid', uid);
+    return this.apiService.getUserPosts({
+      uid,
+      startScore,
+      endScore,
+      pageSize: limit,
+    });
   }
 
   @UseGuards(AuthGuard)
@@ -106,17 +120,35 @@ export class ApiController {
     return this.apiService.createPost(postWithUser);
   }
 
-  @UsePipes(new ZodValidationPipe(updatePostRequestSchema))
+  @UseInterceptors(UserInterceptor)
   @UseGuards(AuthGuard)
-  @Put('post')
-  updatePost(@Body() post: UpdatePostRequest): Promise<PostResponse> {
-    return this.apiService.updatePost(post);
+  @Patch('post/:id')
+  updatePost(
+    @Body() post: UpdatePostRequest,
+    @Req() request: UserRequest,
+    @Param() id: { id: string },
+  ): Promise<any> {
+    const postWithUser = {
+      ...post,
+      author: request.user,
+      _id: new Types.ObjectId(id.id),
+    };
+
+    return this.apiService.updatePost(postWithUser);
   }
 
+  @UseInterceptors(UserInterceptor)
   @UseGuards(AuthGuard)
   @Delete('post/:id')
-  deletePost(@Param() id: string): Promise<void> {
-    return this.apiService.deletePost(id);
+  deletePost(
+    @Req() request: UserRequest,
+    @Param() id: { id: string },
+  ): Promise<void> {
+    const author_id = request.user._id;
+    return this.apiService.deletePost({
+      post_id: id.id,
+      author_id: author_id.toString(),
+    });
   }
 
   @UseGuards(AuthGuard)
@@ -167,5 +199,10 @@ export class ApiController {
   ): Promise<void> {
     const author_id = request.user._id;
     return this.apiService.deleteComment(id.id, author_id.toString()) as any;
+  }
+
+  @Get('populate-db')
+  populateDb(): Promise<void> {
+    return this.apiService.populateDb();
   }
 }
