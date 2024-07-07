@@ -22,7 +22,6 @@ import { Model, Types } from 'mongoose';
 export class ApiService {
   constructor(
     @Inject('AUTH_SERVICE') private readonly authService: ClientProxy,
-    @Inject('COMMENT_SERVICE') private readonly commentService: ClientProxy,
     @Inject('CACHE_SERVICE') private readonly cacheService: ClientProxy,
     @InjectModel(User.name) private userModel: Model<User>,
     @InjectModel(UserPost.name) private postModel: Model<UserPost>,
@@ -85,10 +84,20 @@ export class ApiService {
     }
   }
 
-  async getComments(post_id: string): Promise<CommentResponse[]> {
-    const $response = this.commentService.send<CommentResponse[], any>(
+  async getComments({
+    post_id,
+    startScore,
+    endScore,
+    pageSize,
+  }: {
+    post_id: string;
+    startScore: number;
+    endScore: number;
+    pageSize: number;
+  }): Promise<CommentResponse[]> {
+    const $response = this.cacheService.send<CommentResponse[], any>(
       { cmd: 'comments' },
-      post_id,
+      { post_id, startScore, endScore, pageSize },
     );
 
     const response = await firstValueFrom($response);
@@ -101,21 +110,21 @@ export class ApiService {
   }
 
   async createComment(comment: CreateCommentRequest): Promise<CommentResponse> {
-    return this.commentService.send<CommentResponse, any>(
+    return this.cacheService.send<CommentResponse, any>(
       { cmd: 'add-comment' },
       { ...comment },
     ) as CommentResponse;
   }
 
   async updateComment(comment: UpdateCommentRequest): Promise<CommentResponse> {
-    return this.commentService.send<CommentResponse, any>(
+    return this.cacheService.send<CommentResponse, any>(
       { cmd: 'update-comment' },
       { ...comment },
     ) as CommentResponse;
   }
 
   async deleteComment(id: string, author_id: string): Promise<boolean> {
-    return this.commentService.send<
+    return this.cacheService.send<
       boolean,
       {
         id: string;

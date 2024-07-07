@@ -153,8 +153,18 @@ export class ApiController {
 
   @UseGuards(AuthGuard)
   @Get('post/:id/comments')
-  getComments(@Param() id: { id: string }): Promise<CommentResponse[]> {
-    return this.apiService.getComments(id.id);
+  getComments(
+    @Param() id: { id: string },
+    @Query('start') startScore: number,
+    @Query('end') endScore: number,
+    @Query('limit') limit: number,
+  ): Promise<CommentResponse[]> {
+    return this.apiService.getComments({
+      post_id: id.id,
+      startScore,
+      endScore,
+      pageSize: limit,
+    });
   }
 
   @UseGuards(AuthGuard)
