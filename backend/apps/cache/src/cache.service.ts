@@ -20,12 +20,39 @@ export class CacheService {
     @Inject('COMMENT_SERVICE') private readonly commentService: ClientProxy,
   ) {}
 
-  /**
-   * Create a post with caching logic.
-   * Implements write-through caching to ensure cache consistency.
-   * @param postDetails Details of the post to create.
-   * @returns Created post details.
-   */
+  async setSession(season: {
+    userId: string;
+    sessionId: string;
+    refreshToken: string;
+    ttl: number;
+  }): Promise<void> {
+    await this.redisService.setSession(
+      season.userId,
+      season.sessionId,
+      season.refreshToken,
+      season.ttl,
+    );
+  }
+
+  async getSession(
+    userId: string,
+    sessionId: string,
+  ): Promise<{ refreshToken: string }> {
+    return this.redisService.getSession(userId, sessionId);
+  }
+
+  async deleteSession(userId: string, sessionId: string): Promise<void> {
+    await this.redisService.deleteSession(userId, sessionId);
+  }
+
+  async refreshSession(
+    userId: string,
+    sessionId: string,
+    ttl: number,
+  ): Promise<void> {
+    await this.redisService.refreshSession(userId, sessionId, ttl);
+  }
+
   async createPost(postDetails: CreatePostRequest): Promise<PostResponse> {
     const $post = this.postService.send({ cmd: 'create-post' }, postDetails);
     const post: PostResponse = await firstValueFrom($post);
@@ -38,12 +65,6 @@ export class CacheService {
     return post;
   }
 
-  /**
-   * Get a single post by ID with caching.
-   * Implements read-through caching for efficient data retrieval.
-   * @param postId The unique identifier for the post.
-   * @returns The requested post details.
-   */
   async getPostById(postId: string): Promise<PostResponse> {
     console.log('post -cache service', postId);
     let post: PostResponse = await this.redisService
@@ -64,14 +85,6 @@ export class CacheService {
     return postResponseSchema.parse(post);
   }
 
-  /**
-   * Get all posts with pagination and caching.
-   * Implements read-through caching with pagination support.
-   * @param startScore The starting score for pagination.
-   * @param endScore The ending score for pagination.
-   * @param pageSize The number of items to retrieve.
-   * @returns A list of posts for the requested page.
-   */
   async getPosts(
     startScore: number,
     endScore: number,
@@ -110,15 +123,7 @@ export class CacheService {
       return posts.map((post: any) => postResponseSchema.parse(post));
     }
   }
-  /**
-   * Get posts by a specific user with pagination and caching.
-   * Implements read-through caching with pagination support.
-   * @param userId The unique identifier for the user.
-   * @param startScore The starting score for pagination.
-   * @param endScore The ending score for pagination.
-   * @param pageSize The number of items to retrieve.
-   * @returns A list of posts by the specified user.
-   */
+
   async getUserPosts({
     uid,
     startScore,
@@ -159,13 +164,6 @@ export class CacheService {
     }
   }
 
-  /**
-   * Update a post with caching logic.
-   * Implements write-through caching for data consistency.
-   * Verifies ownership by checking both post ID and author ID.
-   * @param postDetails Details of the post to update.
-   * @returns The updated post details.
-   */
   async updatePost(postDetails: UpdatePostRequest): Promise<any> {
     console.log('Updating post in cache', postDetails);
     const { _id, author } = postDetails;
@@ -178,13 +176,6 @@ export class CacheService {
     return this.postService.send({ cmd: 'update-post' }, postDetails);
   }
 
-  /**
-   * Delete a post with caching logic.
-   * Implements write-through caching for data consistency.
-   * Verifies ownership by checking both post ID and author ID.
-   * @param postId The unique identifier for the post.
-   * @param userId The unique identifier for the user who authored the post.
-   */
   async deletePost({
     post_id,
     author_id,
@@ -202,14 +193,6 @@ export class CacheService {
     );
   }
 
-  // Post methods (already implemented) ...
-
-  /**
-   * Create a comment with caching logic.
-   * Implements write-through caching to ensure cache consistency.
-   * @param commentDetails Details of the comment to create.
-   * @returns Created comment details.
-   */
   async createComment(
     commentDetails: CreateCommentRequest,
   ): Promise<CommentResponse> {
@@ -227,15 +210,6 @@ export class CacheService {
     return commentResponseSchema.parse(comment);
   }
 
-  /**
-   * Get comments by post ID with pagination and caching.
-   * Implements read-through caching with pagination support.
-   * @param postId The unique identifier for the post.
-   * @param startScore The starting score for pagination.
-   * @param endScore The ending score for pagination.
-   * @param pageSize The number of items to retrieve.
-   * @returns A list of comments for the requested page.
-   */
   async getCommentsByPostId(
     postId: string,
     startScore: number,
@@ -278,13 +252,6 @@ export class CacheService {
     }
   }
 
-  /**
-   * Update a comment with caching logic.
-   * Implements write-through caching for data consistency.
-   * Verifies ownership by checking both comment ID and author ID.
-   * @param commentDetails Details of the comment to update.
-   * @returns The updated comment details.
-   */
   async updateComment(
     commentDetails: UpdateCommentRequest,
   ): Promise<CommentResponse> {
@@ -302,13 +269,6 @@ export class CacheService {
     return commentResponseSchema.parse(updatedComment);
   }
 
-  /**
-   * Delete a comment with caching logic.
-   * Implements write-through caching for data consistency.
-   * Verifies ownership by checking both comment ID and author ID.
-   * @param commentId The unique identifier for the comment.
-   * @param authorId The unique identifier for the user who authored the comment.
-   */
   async deleteComment(commentId: string, authorId: string): Promise<boolean> {
     await this.redisService.deleteComment(commentId);
     return firstValueFrom(

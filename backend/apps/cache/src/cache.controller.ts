@@ -23,6 +23,55 @@ export class CacheController {
     private readonly sharedService: SharedService,
   ) {}
 
+  @MessagePattern({ cmd: 'set-season' })
+  async setSeason(
+    @Ctx() context: RmqContext,
+    @Payload()
+    season: {
+      userId: string;
+      sessionId: string;
+      refreshToken: string;
+      ttl: number;
+    },
+  ) {
+    this.sharedService.acknowledgeMessage(context);
+    await this.cacheService.setSession(season);
+  }
+
+  @MessagePattern({ cmd: 'get-season' })
+  async getSeason(
+    @Ctx() context: RmqContext,
+    @Payload()
+    season: { userId: string; sessionId: string },
+  ) {
+    this.sharedService.acknowledgeMessage(context);
+    return this.cacheService.getSession(season.userId, season.sessionId);
+  }
+
+  @MessagePattern({ cmd: 'delete-season' })
+  async deleteSeason(
+    @Ctx() context: RmqContext,
+    @Payload()
+    season: { userId: string; sessionId: string },
+  ) {
+    this.sharedService.acknowledgeMessage(context);
+    await this.cacheService.deleteSession(season.userId, season.sessionId);
+  }
+
+  @MessagePattern({ cmd: 'refresh-season' })
+  async refreshSeason(
+    @Ctx() context: RmqContext,
+    @Payload()
+    season: { userId: string; sessionId: string; ttl: number },
+  ) {
+    this.sharedService.acknowledgeMessage(context);
+    await this.cacheService.refreshSession(
+      season.userId,
+      season.sessionId,
+      season.ttl,
+    );
+  }
+
   @MessagePattern({ cmd: 'get-posts' })
   async getPosts(
     @Ctx() context: RmqContext,

@@ -3,7 +3,12 @@ import { InjectRedis } from '@nestjs-modules/ioredis';
 import Redis from 'ioredis';
 
 import { flattenObject, unflattenObject } from '../utils/util';
-import { PostResponse, UserResponse, userResponseSchema } from '@app/dto';
+import {
+  CreateUserRequest,
+  PostResponse,
+  UserResponse,
+  userResponseSchema,
+} from '@app/dto';
 
 @Injectable()
 export class RedisService {
@@ -12,26 +17,54 @@ export class RedisService {
   getRedisClient() {
     return this.client;
   }
-  // Helper function to fetch multiple hashes using a Redis pipeline
-  // Helper function to fetch multiple hashes using a Redis pipeline
+
+  async setSession(
+    userId: string,
+    sessionId: string,
+    refreshToken: string,
+    ttl: number,
+  ): Promise<void> {
+    await this.client.hmset(`session:${userId}:${sessionId}`, {
+      refreshToken,
+    });
+    await this.client.expire(`session:${userId}:${sessionId}`, ttl);
+  }
+
+  async getSession(
+    userId: string,
+    sessionId: string,
+  ): Promise<{ refreshToken: string }> {
+    const result = await this.client.hgetall(`session:${userId}:${sessionId}`);
+    if (Object.keys(result).length === 0) return null;
+    return result as { refreshToken: string };
+  }
+
+  async deleteSession(userId: string, sessionId: string): Promise<void> {
+    await this.client.del(`session:${userId}:${sessionId}`);
+  }
+
+  async refreshSession(
+    userId: string,
+    sessionId: string,
+    ttl: number,
+  ): Promise<void> {
+    await this.client.expire(`session:${userId}:${sessionId}`, ttl);
+  }
   async fetchHashes(keys: string[]): Promise<any[]> {
     if (keys.length === 0) return [];
 
-    // Execute pipeline with hgetall commands
     const pipeline = this.client.pipeline();
     keys.forEach((key) => pipeline.hgetall(key));
     const results = await pipeline.exec();
 
-    // Process results: convert types and unflatten objects
     return results.map(([err, hash]) => {
-      if (err) throw err; // Handle any errors from the pipeline
+      if (err) throw err;
 
       return unflattenObject(hash);
     });
   }
 
-  // Users
-  async addUser(userId: string, userDetails: any): Promise<void> {
+  async addUser(userId: string, userDetails: CreateUserRequest): Promise<void> {
     const flatUser = flattenObject(userDetails);
     await this.client.hmset(`user:${userId}`, flatUser);
   }
@@ -41,7 +74,6 @@ export class RedisService {
     return userResponseSchema.parse(unflattenObject(user));
   }
 
-  // Example function to add a post
   async addPost(
     userId: string,
     postId: string,
@@ -62,7 +94,7 @@ export class RedisService {
     const postIds = await this.client.zrangebyscore(
       'posts:global',
       startScore,
-      `(${endScore}`, // Exclusive endScore to avoid overlap
+      `(${endScore}`,
       'LIMIT',
       0,
       pageSize,
@@ -115,7 +147,6 @@ export class RedisService {
     await this.client.zrem(`posts:byUser:${userId}`, postId);
   }
 
-  // Comments
   async addComment(
     postId: string,
     commentId: string,
