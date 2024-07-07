@@ -116,14 +116,16 @@ Scalability is a critical consideration in our architecture. Here's how we've de
 
 Let's visualize the architecture with a flow diagram:
 
+### Comment System Architecture Diagram
+
+Here is the architecture diagram for the comment system:
+
 ```mermaid
 graph TD
     A[API Layer] -->|HTTP Request| B(Auth Guard)
     B -->|Validate JWT| C[Cache Layer (Redis)]
     C -->|Cache Hit| D[Return Response]
-    C -->|Cache Miss| E[Post/Comment Service
-
-]
+    C -->|Cache Miss| E[Post/Comment Service]
     E -->|Fetch Data| F[MongoDB]
     F -->|Return Data| E
     E -->|Update Cache| C
@@ -132,6 +134,18 @@ graph TD
     H[MQTT] --> E
     H --> C
 ```
+
+### Explanation
+
+#### Comment System
+
+- **API Layer**: Receives HTTP requests from clients and routes them to the appropriate services.
+- **Auth Guard**: Validates JWTs to ensure that requests are authenticated.
+- **Cache Layer (Redis)**: Checks if the requested data is in the cache. If found (cache hit), it returns the data immediately. If not found (cache miss), it forwards the request to the relevant service.
+- **Post/Comment Service**: Handles CRUD operations for posts and comments, interacting with MongoDB for persistent storage.
+- **MongoDB**: Stores all user, post, and comment data.
+- **MQTT**: Facilitates real-time updates and communication between services.
+- **Cache Update**: On a cache miss, the fetched data from MongoDB is stored in the cache for future requests.
 
 ### Cache Layer in Detail
 
@@ -199,6 +213,32 @@ I started building and designing the initial architecture for the chat functiona
 
 - **Real-World Example**: In a production environment, if I have thousands of users connected to the chat, Redis Pub/Sub will distribute the messages across all connected clients efficiently. This ensures that each user receives messages without delay, providing a seamless chat experience.
 
+
+### Chat Application Architecture Diagram
+
+Here is the architecture diagram for the chat application:
+
+```mermaid
+graph TD
+    A[Client] -->|WebSocket Connection| B[Socket.io Server]
+    B -->|Message Received| C[Redis Pub/Sub]
+    C -->|Publish Message| D[Socket.io Instances]
+    D -->|Broadcast to Clients| E[Client 1]
+    D -->|Broadcast to Clients| F[Client 2]
+    D -->|Broadcast to Clients| G[Client n]
+    H[API Layer] -->|HTTP Request| I[Auth Guard]
+    I -->|Validate JWT| J[User Service]
+    J -->|Authenticate| B
+```
+#### Chat Application
+
+- **Client**: Connects to the server using WebSocket through Socket.io for real-time communication.
+- **Socket.io Server**: Handles incoming messages from clients and communicates with Redis Pub/Sub to distribute messages.
+- **Redis Pub/Sub**: Ensures message delivery across multiple Socket.io server instances.
+- **Socket.io Instances**: Multiple instances of Socket.io servers to handle scaling. Each instance can broadcast messages to connected clients.
+- **API Layer**: Handles HTTP requests related to user authentication.
+- **Auth Guard**: Validates JWTs for secure communication.
+- **User Service**: Authenticates users and ensures they are authorized to use the chat service.
 
 ### Frontend 
 
