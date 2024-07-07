@@ -112,10 +112,6 @@ Scalability is a critical consideration in our architecture. Here's how we've de
 - **Throughput**: MongoDB sharding can handle petabytes of data and thousands of operations per second. This means we can manage millions of comments and user interactions without degrading performance.
 - **Concurrent Connections**: MQTT can handle thousands of concurrent connections, ensuring real-time updates for a large number of users.
 
-### Flow Diagram
-
-Let's visualize the architecture with a flow diagram:
-
 ### Comment System Architecture Diagram
 
 Here is the architecture diagram for the comment system:
