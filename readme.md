@@ -122,17 +122,18 @@ Here is the architecture diagram for the comment system:
 
 ```mermaid
 graph TD
-    A[API Layer] -->|HTTP Request| B(Auth Guard)
-    B -->|Validate JWT| C[Cache Layer (Redis)]
-    C -->|Cache Hit| D[Return Response]
-    C -->|Cache Miss| E[Post/Comment Service]
-    E -->|Fetch Data| F[MongoDB]
-    F -->|Return Data| E
-    E -->|Update Cache| C
-    E -->|Return Data| A
-    A --> G[Return Response to Client]
-    H[MQTT] --> E
-    H --> C
+    A[Client] -->|HTTP Request| B[API Layer]
+    B -->|JWT Validation| C[Auth Guard]
+    C -->|Forward Valid Request| D[Cache Layer (Redis)]
+    D -->|Cache Hit| E[Return Response to API Layer]
+    D -->|Cache Miss| F[Post/Comment Service]
+    F -->|Fetch Data| G[MongoDB]
+    G -->|Return Data| F
+    F -->|Update Cache| D
+    E --> B
+    B --> A
+    H[MQTT] --> F
+    H --> D
 ```
 
 ### Explanation
