@@ -57,7 +57,8 @@ export class AppController {
     this.sharedService.acknowledgeMessage(context);
 
     const res = await this.appService.getUserFromHeader(payload.cookie);
-    return author.parse(res.user);
+    console.log('decodeJwt', res);
+    return author.parse(res);
   }
 
   @MessagePattern({ cmd: 'verify-jwt' })

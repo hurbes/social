@@ -249,7 +249,6 @@ export class ApiService {
       httpOnly: true,
       secure: true,
       sameSite: 'none',
-      maxAge: 1.8e6,
       path: '/',
     });
 
@@ -257,7 +256,6 @@ export class ApiService {
       httpOnly: true,
       secure: true,
       sameSite: 'none',
-      maxAge: 1.296e9,
       path: '/',
     });
 

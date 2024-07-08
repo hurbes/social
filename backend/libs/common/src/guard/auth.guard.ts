@@ -41,7 +41,7 @@ export class AuthGuard implements CanActivate {
       if (currentTime < exp) {
         return true;
       } else {
-        const refreshToken = request.cookies.RefreshToken;
+        const refreshToken = request.cookies.Refresh;
         if (!refreshToken) throw new UnauthorizedException();
 
         const { jwt: newJwt, refreshToken: newRefreshToken } =
@@ -56,7 +56,6 @@ export class AuthGuard implements CanActivate {
           httpOnly: true,
           secure: true,
           sameSite: 'none',
-          maxAge: 1.8e6,
           path: '/',
         });
 
@@ -64,7 +63,6 @@ export class AuthGuard implements CanActivate {
           httpOnly: true,
           secure: true,
           sameSite: 'none',
-          maxAge: 1.296e9,
           path: '/',
         });
 

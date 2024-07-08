@@ -8,6 +8,7 @@ import {
   postResponseSchema,
   UpdateCommentRequest,
   UpdatePostRequest,
+  UserResponse,
 } from '@app/dto';
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
@@ -19,6 +20,14 @@ export class CacheService {
     @Inject('POST_SERVICE') private readonly postService: ClientProxy,
     @Inject('COMMENT_SERVICE') private readonly commentService: ClientProxy,
   ) {}
+
+  async addUser(user: UserResponse): Promise<void> {
+    await this.redisService.addUser(user._id.toString(), user);
+  }
+
+  async getUserById(id: string): Promise<UserResponse | undefined> {
+    return this.redisService.getUser(id);
+  }
 
   async setSession(season: {
     userId: string;

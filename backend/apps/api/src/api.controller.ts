@@ -118,6 +118,7 @@ export class ApiController {
     @Req() request: UserRequest,
   ): Promise<PostResponse> {
     const postWithUser = { ...post, author: request.user };
+    console.log('postWithUser', request.user);
     return this.apiService.createPost(postWithUser);
   }
 

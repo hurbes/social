@@ -3,12 +3,7 @@ import { InjectRedis } from '@nestjs-modules/ioredis';
 import Redis from 'ioredis';
 
 import { flattenObject, unflattenObject } from '../utils/util';
-import {
-  CreateUserRequest,
-  PostResponse,
-  UserResponse,
-  userResponseSchema,
-} from '@app/dto';
+import { PostResponse, UserResponse, userResponseSchema } from '@app/dto';
 
 @Injectable()
 export class RedisService {
@@ -64,13 +59,16 @@ export class RedisService {
     });
   }
 
-  async addUser(userId: string, userDetails: CreateUserRequest): Promise<void> {
+  async addUser(userId: string, userDetails: UserResponse): Promise<void> {
     const flatUser = flattenObject(userDetails);
     await this.client.hmset(`user:${userId}`, flatUser);
   }
 
-  async getUser(userId: string): Promise<UserResponse> {
+  async getUser(userId: string): Promise<UserResponse | undefined> {
     const user = await this.client.hgetall(`user:${userId}`);
+    console.log('Fetched user:', user);
+    if (Object.keys(user).length === 0) return null;
+
     return userResponseSchema.parse(unflattenObject(user));
   }
 

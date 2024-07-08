@@ -12,6 +12,7 @@ import {
   PostResponse,
   UpdateCommentRequest,
   UpdatePostRequest,
+  UserResponse,
 } from '@app/dto';
 import { SharedService } from '@app/common';
 
@@ -22,6 +23,26 @@ export class CacheController {
     @Inject('SharedServiceInterface')
     private readonly sharedService: SharedService,
   ) {}
+
+  @MessagePattern({ cmd: 'set-user' })
+  async register(
+    @Ctx() context: RmqContext,
+    @Payload() newUser: UserResponse,
+  ): Promise<void> {
+    this.sharedService.acknowledgeMessage(context);
+
+    this.cacheService.addUser(newUser);
+  }
+
+  @MessagePattern({ cmd: 'get-user' })
+  async login(
+    @Ctx() context: RmqContext,
+    @Payload() uid: string,
+  ): Promise<UserResponse> {
+    this.sharedService.acknowledgeMessage(context);
+
+    return this.cacheService.getUserById(uid);
+  }
 
   @MessagePattern({ cmd: 'set-season' })
   async setSeason(

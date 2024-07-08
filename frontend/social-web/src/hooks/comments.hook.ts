@@ -87,7 +87,7 @@ const useFetchComments = () => {
     hasNextPage,
     isFetchingNextPage,
   } = useInfiniteQuery({
-    queryKey: ["posts"],
+    queryKey: [`/${post_id}/comments`],
     queryFn: ({ pageParam, signal }) => {
       return fetchComments({
         post_id: post_id!,

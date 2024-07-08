@@ -6,7 +6,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
-import { User, UserJwt } from '@app/common';
+import { User } from '@app/common';
 import { UserRepository } from './repository/user.repository';
 
 import { JwtService } from '@nestjs/jwt';
@@ -37,7 +37,17 @@ export class AppService {
   }
 
   async getUserById(id: string): Promise<UserResponse> {
+    console.log('user-getUserById', id);
+    const $cachedUser = this.cacheService.send({ cmd: 'get-user' }, id);
+    const user = await firstValueFrom<UserResponse>($cachedUser);
+    console.log('user-cached user', user);
+    if (user) {
+      return userResponseSchema.parse(user);
+    }
+
     const result = await this.usersRepository.findOne({ _id: id });
+    console.log('user-result', result);
+    this.cacheService.send({ cmd: 'set-user' }, { ...result });
     return userResponseSchema.parse(result);
   }
 
@@ -122,11 +132,14 @@ export class AppService {
     return user;
   }
 
-  async getUserFromHeader(jwt: string): Promise<UserJwt> {
+  async getUserFromHeader(jwt: string): Promise<UserResponse> {
     if (!jwt) return;
 
     try {
-      return this.jwtService.decode(jwt);
+      const { userId } = await this.jwtService.decode(jwt);
+
+      console.log('userId', userId);
+      return this.getUserById(userId);
     } catch (error) {
       throw new BadRequestException();
     }
