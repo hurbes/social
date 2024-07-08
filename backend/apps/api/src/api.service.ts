@@ -266,7 +266,7 @@ export class ApiService {
     return this.authService.send({ cmd: 'register' }, { ...body }) as any;
   }
 
-  async logOut(response: Response): Promise<void> {
+  async logOut(response: Response): Promise<any> {
     response.cookie('Authentication', '', {
       httpOnly: true,
       secure: true,
@@ -278,6 +278,8 @@ export class ApiService {
       sameSite: 'none',
     });
 
-    return;
+    return response.status(200).send({
+      message: 'Logged out',
+    });
   }
 }

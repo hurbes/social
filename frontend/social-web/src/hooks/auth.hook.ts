@@ -1,3 +1,4 @@
+"use client";
 import { useForm } from "react-hook-form";
 
 import { useRouter } from "next/navigation";
@@ -102,7 +103,7 @@ const useLogOut = () => {
     mutationFn: () => {
       return createAPIMethods({
         url: "http://localhost:3001/api/v1/auth/logout/",
-        method: "POST",
+        method: "GET",
       });
     },
     mutationKey: ["logout"],

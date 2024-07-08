@@ -2,15 +2,14 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 export async function middleware(req: NextRequest) {
-  console.log("middleware", req.cookies.get("Authentication"));
-  const cookie = req.cookies.has("Authentication");
+  const cookie = req.cookies.get("Authentication");
 
   const unprotectedPaths = ["/auth/login", "/auth/register"];
   if (unprotectedPaths.includes(req.nextUrl.pathname)) {
     return NextResponse.next();
   }
 
-  if (!cookie) {
+  if (!cookie?.value) {
     return NextResponse.redirect(new URL("/auth/login", req.url));
   }
 
