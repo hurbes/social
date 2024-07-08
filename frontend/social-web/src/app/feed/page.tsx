@@ -11,6 +11,7 @@ import { Loader } from "@/components/loader";
 import { InView, useInView } from "react-intersection-observer";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { start } from "repl";
+import { useLogOut } from "@/hooks/auth.hook";
 const PostForm: React.FC = () => {
   const { handleSubmit, control, isPending } = useCreatePost();
 
@@ -63,6 +64,7 @@ const getPosts = async ({
 };
 
 export default function Feed() {
+  const { logOut } = useLogOut();
   const { posts, isLoading, hasNextPage, ref } = useFetchPosts();
 
   return (
@@ -72,7 +74,7 @@ export default function Feed() {
           <a href='/chat'>
             <AppButton title='Messenger' />
           </a>
-          <AppButton title='Log Out' />
+          <AppButton title='Log Out' onClick={logOut} />
         </div>
       </div>
       <div className='flex-grow w-1/2 '>

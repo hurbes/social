@@ -95,4 +95,31 @@ const useRegistrationForm = () => {
   };
 };
 
-export { useUser, useLoginForm, useRegistrationForm };
+const useLogOut = () => {
+  const router = useRouter();
+
+  const { mutate, isPending } = useMutation({
+    mutationFn: () => {
+      return createAPIMethods({
+        url: "http://localhost:3001/api/v1/auth/logout/",
+        method: "POST",
+      });
+    },
+    mutationKey: ["logout"],
+    onError: (error) => {
+      console.error("Logout failed: ", error);
+    },
+    onSuccess: () => {
+      console.log("Logout successful");
+      router.push("/auth/login");
+    },
+  });
+
+  const logOut = () => {
+    mutate();
+  };
+
+  return { logOut, isLoading: isPending };
+};
+
+export { useUser, useLogOut, useLoginForm, useRegistrationForm };
