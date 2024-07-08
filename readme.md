@@ -18,6 +18,18 @@ Alright, let's dive into the nitty-gritty of our backend architecture. This proj
 
 Each service is isolated, ensuring that we can scale, update, and maintain them independently. This isolation enhances fault tolerance, as a failure in one service won't necessarily bring down the entire system.
 
+### Improvements
+
+1. **Code Clean Up**: Ensuring that the codebase is clean, well-documented, and adheres to best practices. This includes removing redundant code, improving naming conventions, and ensuring consistent formatting.
+2. **Better Code Sharability**: Refactoring code to make it more modular and reusable across different parts of the application. This includes creating utility functions, common modules, and shared components.
+3. **Better HTTP Error Handling**: Implementing more robust error handling mechanisms to provide meaningful error messages and handle edge cases gracefully. This includes using middleware to catch and handle errors globally.
+4. **Database Clean Up Service**: Creating a service that periodically cleans up stale or unused data from the database to ensure optimal performance and storage management.
+
+### Caveats
+
+1. **Enabled Duplicate and Auto Infinite Scroll on Feed**: Demonstrated cached pagination by enabling duplicate posts and auto infinite scroll. This was done to showcase the efficiency of our caching strategy.
+2. **Auto JWT Refresh Disabled**: To highlight our authentication and security aspects, auto JWT refresh has been disabled. This allows us to demonstrate the manual refresh flow and the importance of secure token management.
+
 ### Why MongoDB?
 
 MongoDB is our NoSQL database of choice. Why? Let's break it down:
