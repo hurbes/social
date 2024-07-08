@@ -1,4 +1,6 @@
 import { RedisService } from '@app/common';
+import { unflatten } from '@app/common/utils/util';
+
 import {
   CommentResponse,
   commentResponseSchema,
@@ -79,10 +81,13 @@ export class CacheService {
     let post: PostResponse = await this.redisService
       .getRedisClient()
       .hgetall(`post:${postId}`);
+    console.log('post -cache service cache', post);
     if (!post || Object.keys(post).length === 0) {
       post = await firstValueFrom(
         this.postService.send({ cmd: 'get-post' }, postId),
       );
+
+      console.log('post -cache service', post);
       if (post) {
         await this.redisService.addPost(
           post.author._id.toString(),
@@ -91,7 +96,9 @@ export class CacheService {
         );
       }
     }
-    return postResponseSchema.parse(post);
+    const un = unflatten(post);
+    console.log('post -cache service unflatten', un);
+    return postResponseSchema.parse(un);
   }
 
   async getPosts(

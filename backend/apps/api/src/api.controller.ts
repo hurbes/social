@@ -70,7 +70,7 @@ export class ApiController {
 
   @UsePipes(new ZodValidationPipe(userResponseSchema))
   @UseGuards(AuthGuard)
-  @Put('users')
+  @Put('user')
   updateUser(user: UserResponse): Promise<UserResponse> {
     return this.apiService.updateUser(user);
   }
@@ -93,7 +93,6 @@ export class ApiController {
     @Query('end') endScore: number,
     @Query('limit') limit: number,
   ): Promise<PostResponse[]> {
-    console.log('uid', uid);
     return this.apiService.getUserPosts({
       uid,
       startScore,
@@ -104,8 +103,7 @@ export class ApiController {
 
   @UseGuards(AuthGuard)
   @Get('post/:id')
-  getPostById(@Param() id: string): Promise<PostResponse> {
-    console.log('post -api controller', id);
+  getPostById(@Param() id: { post_id: string }): Promise<PostResponse> {
     return this.apiService.getPostById(id);
   }
 
@@ -118,7 +116,6 @@ export class ApiController {
     @Req() request: UserRequest,
   ): Promise<PostResponse> {
     const postWithUser = { ...post, author: request.user };
-    console.log('postWithUser', request.user);
     return this.apiService.createPost(postWithUser);
   }
 

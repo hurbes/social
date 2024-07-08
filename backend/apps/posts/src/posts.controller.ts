@@ -56,11 +56,11 @@ export class PostsController {
   @MessagePattern({ cmd: 'get-post' })
   async getPost(
     @Ctx() context: RmqContext,
-    @Payload() post: { id: string },
+    @Payload() post: string,
   ): Promise<PostResponse> {
     console.log('get-post controller', post);
     this.sharedService.acknowledgeMessage(context);
-    return this.postsService.getPostById(post.id);
+    return this.postsService.getPostById(post);
   }
 
   @MessagePattern({ cmd: 'update-post' })

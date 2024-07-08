@@ -40,35 +40,37 @@ export class AuthGuard implements CanActivate {
 
       if (currentTime < exp) {
         return true;
-      } else {
-        const refreshToken = request.cookies.Refresh;
-        if (!refreshToken) throw new UnauthorizedException();
-
-        const { jwt: newJwt, refreshToken: newRefreshToken } =
-          await firstValueFrom(
-            this.authService.send<{ jwt: string; refreshToken: string }>(
-              { cmd: 'refresh-jwt' },
-              { userId, sessionId, refreshToken },
-            ),
-          );
-
-        response.cookie('Authentication', newJwt, {
-          httpOnly: true,
-          secure: true,
-          sameSite: 'none',
-          path: '/',
-        });
-
-        response.cookie('Refresh', newRefreshToken, {
-          httpOnly: true,
-          secure: true,
-          sameSite: 'none',
-          path: '/',
-        });
-
-        return true;
       }
+
+      const refreshToken = request.cookies.Refresh;
+
+      if (!refreshToken) throw new UnauthorizedException();
+
+      const { jwt: newJwt, refreshToken: newRefreshToken } =
+        await firstValueFrom(
+          this.authService.send<{ jwt: string; refreshToken: string }>(
+            { cmd: 'refresh-jwt' },
+            { userId, sessionId, refreshToken },
+          ),
+        );
+
+      response.cookie('Authentication', newJwt, {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'none',
+        path: '/',
+      });
+
+      response.cookie('Refresh', newRefreshToken, {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'none',
+        path: '/',
+      });
+
+      return true;
     } catch (error) {
+      console.error('Auth guard error: ', error);
       throw new UnauthorizedException();
     }
   }

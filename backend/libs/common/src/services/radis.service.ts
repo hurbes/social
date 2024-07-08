@@ -1,9 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRedis } from '@nestjs-modules/ioredis';
 import Redis from 'ioredis';
-
-import { flattenObject, unflattenObject } from '../utils/util';
 import { PostResponse, UserResponse, userResponseSchema } from '@app/dto';
+import { flatten, unflatten } from '../utils/util';
 
 @Injectable()
 export class RedisService {
@@ -55,12 +54,12 @@ export class RedisService {
     return results.map(([err, hash]) => {
       if (err) throw err;
 
-      return unflattenObject(hash);
+      return unflatten(hash);
     });
   }
 
   async addUser(userId: string, userDetails: UserResponse): Promise<void> {
-    const flatUser = flattenObject(userDetails);
+    const flatUser = flatten(userDetails) as any;
     await this.client.hmset(`user:${userId}`, flatUser);
   }
 
@@ -69,7 +68,7 @@ export class RedisService {
     console.log('Fetched user:', user);
     if (Object.keys(user).length === 0) return null;
 
-    return userResponseSchema.parse(unflattenObject(user));
+    return userResponseSchema.parse(unflatten(user));
   }
 
   async addPost(
@@ -77,7 +76,7 @@ export class RedisService {
     postId: string,
     postDetails: PostResponse,
   ): Promise<void> {
-    const flatPost = flattenObject(postDetails);
+    const flatPost = flatten(postDetails) as any;
     await this.client.hmset(`post:${postId}`, flatPost);
     const timestamp = new Date(postDetails.createdAt).getTime();
     await this.client.zadd(`posts:byUser:${userId}`, timestamp, postId);
@@ -125,7 +124,7 @@ export class RedisService {
     userId: string,
     updates: any,
   ): Promise<void> {
-    const flatUpdates = flattenObject(updates);
+    const flatUpdates = flatten(updates) as any;
     await this.client.hmset(`post:${postId}`, flatUpdates);
     if (updates.timestamp) {
       const newTimestamp = updates.timestamp;
@@ -150,7 +149,7 @@ export class RedisService {
     commentId: string,
     commentDetails: any,
   ): Promise<void> {
-    const flatComment = flattenObject(commentDetails);
+    const flatComment = flatten(commentDetails) as any;
     await this.client.hmset(`comment:${commentId}`, flatComment);
     const timestamp = new Date().getTime();
     await this.client.zadd(`comments:byPost:${postId}`, timestamp, commentId);
@@ -181,7 +180,7 @@ export class RedisService {
   ): Promise<void> {
     const comment = await this.client.hgetall(`comment:${commentId}`);
 
-    const flatUpdates = flattenObject(updates);
+    const flatUpdates = flatten(updates) as any;
     await this.client.hmset(`comment:${commentId}`, flatUpdates);
     if (updates.timestamp) {
       const newTimestamp = updates.timestamp;

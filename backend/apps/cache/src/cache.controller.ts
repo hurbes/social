@@ -122,11 +122,11 @@ export class CacheController {
   @MessagePattern({ cmd: 'get-post' })
   async getPost(
     @Ctx() context: RmqContext,
-    @Payload() post: string,
+    @Payload() id: { id: string },
   ): Promise<PostResponse> {
-    console.log('post -cache controller', post);
+    console.log('post -cache controller', id);
     this.sharedService.acknowledgeMessage(context);
-    return this.cacheService.getPostById(post);
+    return this.cacheService.getPostById(id.id);
   }
 
   @MessagePattern({ cmd: 'create-post' })
