@@ -265,4 +265,19 @@ export class ApiService {
   async register(body: CreateUserRequest): Promise<UserResponse> {
     return this.authService.send({ cmd: 'register' }, { ...body }) as any;
   }
+
+  async logOut(response: Response): Promise<void> {
+    response.cookie('Authentication', '', {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+    });
+    response.cookie('Refresh', '', {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+    });
+
+    return;
+  }
 }

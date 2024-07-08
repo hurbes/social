@@ -210,6 +210,12 @@ export class ApiController {
     return this.apiService.deleteComment(id.id, author_id.toString()) as any;
   }
 
+  @UseGuards(AuthGuard)
+  @Get('auth/logout')
+  logOut(@Res({ passthrough: true }) response: Response): void {
+    this.apiService.logOut(response);
+  }
+
   @Get('populate-db')
   populateDb(): Promise<void> {
     return this.apiService.populateDb();
