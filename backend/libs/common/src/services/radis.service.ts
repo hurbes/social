@@ -139,9 +139,11 @@ export class RedisService {
   }
 
   async deletePost(postId: string, userId: string): Promise<void> {
-    await this.client.del(`post:${postId}`);
-    await this.client.zrem('posts:global', postId);
-    await this.client.zrem(`posts:byUser:${userId}`, postId);
+    await Promise.all([
+      this.client.del(`post:${postId}`),
+      this.client.zrem('posts:global', postId),
+      this.client.zrem(`posts:byUser:${userId}`, postId),
+    ]);
   }
 
   async addComment(
